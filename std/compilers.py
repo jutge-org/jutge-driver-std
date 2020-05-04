@@ -178,10 +178,7 @@ class Compiler_GCC (Compiler):
         return 'compiler'
 
     def executable(self):
-        ext = 'exe'
-        if self.toolkit_mode:
-            ext = self.extension() + '.exe'
-        return self.name + '.' + ext
+        return 'program.exe'
 
     def prepare_execution(self, ori):
         util.copy_file(ori + '/' + self.executable(), '.')
@@ -201,21 +198,8 @@ class Compiler_GCC (Compiler):
     def extension(self):
         return 'c'
 
-    def execute(self, tst, correct, iterations=1):
-        if self.toolkit_mode:
-            if correct:
-                ext = 'cor'
-                print("./%s < %s.inp > %s.%s" % (self.executable(), tst, tst, ext), end='')
-            else:
-                ext = 'c.out'
-
-            '''func.system("./%s < %s.inp > %s.%s" %
-                        (self.executable(), tst, tst, ext))'''
-            func = 'import os; os.system("./%s < %s.inp > %s.%s")' % (self.executable(), tst, tst, ext)
-            time = timeit.timeit(func, number=iterations)/iterations
-            return time
-        else:
-            self.execute_monitor(tst, './program.exe')
+    def execute(self, tst):
+        self.execute_monitor(tst, './program.exe')
 
     def compile(self):
         if 'source_modifier' in self.handler and (self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
@@ -224,138 +208,88 @@ class Compiler_GCC (Compiler):
             return self.compile_normal()
 
     def compile_normal(self):
-        util.del_file(self.executable())
+        util.del_file('program.exe')
         try:
-            if self.toolkit_mode:
-                self.execute_compiler('gcc ' + self.flags1() + ' ' + self.name +
-                                  '.c -o ' + self.executable() + ' -lm')
-            else:
-                self.execute_compiler('gcc ' + self.flags1() + ' program.c -o program.exe -lm 2> compilation1.txt')
+            self.execute_compiler('gcc ' + self.flags1() + ' program.c -o program.exe -lm 2> compilation1.txt')
         except CompilationTooLong:
-            if self.toolkit_mode:
-                print(Style.BRIGHT + Fore.RED + 'Compilation time exceeded!' + Style.RESET_ALL)
-            else:
-                util.write_file('compilation1.txt', 'Compilation time exceeded')
-            util.del_file(self.executable())
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
             return False
-
-        return util.file_exists(self.executable())
+        return util.file_exists('program.exe')
 
     def compile_no_main(self):
-        if self.toolkit_mode:
-            util.copy_file(self.name + '.c', 'modified.c')
-            ori = util.read_file('modified.c')
-            main = util.read_file('main.c')
-            util.write_file('modified.c',
-                            '''
-    #define main main__3
 
-    %s
-
-    #undef main
-    #define main main__2
-
-    %s
-
-    #undef main
-
-    int main() {
-        return main__2();
-    }
-
-    ''' % (ori, main))
-
-            # Compile modified program
-            util.del_file(self.executable())
-            try:
-                self.execute_compiler('gcc ' + self.flags2() + ' modified.c -o ' +
-                                      self.executable() + ' -lm')
-            except CompilationTooLong:
-                print(Style.BRIGHT + Fore.RED + 'Compilation time exceeded!' + Style.RESET_ALL)
-                util.del_file(self.executable())
-                util.del_file('modified.c')
-                return False
-
-            # We are almost there
-            util.del_file('modified.c')
-            if util.file_exists(self.executable()):
-                return True
-            else:
-                print(Style.BRIGHT + Fore.RED + 'Unreported error.' + Style.RESET_ALL)
-                util.del_file(self.executable())
-                return False
-        else:
-            # Compile (-c) original program
-            util.del_file('program.exe')
+        # Compile (-c) original program
+        util.del_file('program.exe')
+        util.del_file('program.o')
+        try:
+            self.execute_compiler('gcc -c ' + self.flags1() + ' program.c 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.o')
-            try:
-                self.execute_compiler('gcc -c ' + self.flags1() + ' program.c 2> compilation1.txt')
-            except CompilationTooLong:
-                util.write_file('compilation1.txt', 'Compilation time exceeded')
-                util.del_file('program.o')
-                return False
-            if not util.file_exists('program.o'):
-                return False
+            return False
+        if not util.file_exists('program.o'):
+            return False
 
-            # Modify the program
-            util.copy_file('program.c', 'original.c')
-            ori = util.read_file('program.c')
-            main = util.read_file('../problem/main.c')
-            util.write_file('program.c',
-                            '''
+        # Modify the program
+        util.copy_file('program.c', 'original.c')
+        ori = util.read_file('program.c')
+        main = util.read_file('../problem/main.c')
+        util.write_file('program.c',
+                        '''
 
-    // **************************************************************************
-    // Inici codi afegit pel Jutge
-    // **************************************************************************
+// **************************************************************************
+// Inici codi afegit pel Jutge
+// **************************************************************************
 
-    #define main main__3
+#define main main__3
 
-    // **************************************************************************
-    // Final codi afegit pel Jutge
-    // **************************************************************************
+// **************************************************************************
+// Final codi afegit pel Jutge
+// **************************************************************************
 
 
-    %s
+%s
 
 
 
-    // **************************************************************************
-    // Inici codi afegit pel Jutge
-    // **************************************************************************
+// **************************************************************************
+// Inici codi afegit pel Jutge
+// **************************************************************************
 
-    #undef main
-    #define main main__2
+#undef main
+#define main main__2
 
-    %s
+%s
 
-    #undef main
+#undef main
 
-    int main() {
-        return main__2();
-    }
+int main() {
+    return main__2();
+}
 
-    // **************************************************************************
-    // Final codi afegit pel Jutge
-    // **************************************************************************
+// **************************************************************************
+// Final codi afegit pel Jutge
+// **************************************************************************
 
-    ''' % (ori, main))
+''' % (ori, main))
 
-            # Compile modified program
+        # Compile modified program
+        util.del_file('program.exe')
+        try:
+            self.execute_compiler('gcc ' + self.flags2() + ' program.c -o program.exe -lm 2> compilation2.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
-            try:
-                self.execute_compiler('gcc ' + self.flags2() + ' program.c -o program.exe -lm 2> compilation2.txt')
-            except CompilationTooLong:
-                util.write_file('compilation1.txt', 'Compilation time exceeded')
-                util.del_file('program.exe')
-                return False
+            return False
 
-            # We are almost there
-            if util.file_exists('program.exe'):
-                return True
-            else:
-                util.write_file('compilation1.txt', "Unreported error. ")
-                util.del_file('program.exe')
-                return False
+        # We are almost there
+        if util.file_exists('program.exe'):
+            return True
+        else:
+            util.write_file('compilation1.txt', "Unreported error. ")
+            util.del_file('program.exe')
+            return False
 class Compiler_GXX (Compiler):
 
     compilers.append('GXX')
@@ -388,20 +322,7 @@ class Compiler_GXX (Compiler):
         return 'cc'
 
     def execute(self, tst):
-        if self.toolkit_mode:
-            if correct:
-                ext = 'cor'
-                print("./%s < %s.inp > %s.%s" % (self.executable(), tst, tst, ext), end='')
-            else:
-                ext = 'c.out'
-
-            '''func.system("./%s < %s.inp > %s.%s" %
-                        (self.executable(), tst, tst, ext))'''
-            func = 'import os; os.system("./%s < %s.inp > %s.%s")' % (self.executable(), tst, tst, ext)
-            time = timeit.timeit(func, number=iterations)/iterations
-            return time
-        else:
-            self.execute_monitor(tst, './program.exe')
+        self.execute_monitor(tst, './program.exe')
 
     def compile(self):
         if 'source_modifier' in self.handler and (self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
@@ -410,20 +331,17 @@ class Compiler_GXX (Compiler):
             return self.compile_normal()
 
     def compile_normal(self):
-        util.del_file(self.executable())
 
+        # Compile original program
+        util.del_file('program.exe')
         try:
-            self.execute_compiler('g++ ' + self.flags1() + ' ' + self.name +
-                                  '.cc -o ' + self.executable())
+            self.execute_compiler('g++ ' + self.flags1() + ' program.cc -o program.exe 2> compilation1.txt')
         except CompilationTooLong:
-            if self.toolkit_mode:
-                print(Style.BRIGHT + Fore.RED + 'Compilation time exceeded!' + Style.RESET_ALL)
-                util.del_file(self.executable())
-            else:
-                util.write_file('compilation1.txt', 'Compilation time exceeded')
-                util.del_file('program.exe')
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
             return False
-        if self.toolkit_mode: return util.file_exists(self.executable())
+        if not util.file_exists('program.exe'):
+            return False
 
         # Modify the program
         util.copy_file('program.cc', 'original.cc')
@@ -490,45 +408,15 @@ int main() {
             return False
 
     def compile_no_main(self):
-        if self.toolkit_mode:
-            util.copy_file(self.name + '.cc', 'modified.cc')
-            ori = util.read_file('modified.cc')
-            main = util.read_file('main.cc')
-            util.write_file('modified.cc',
-                        '''
-#define main main__3
 
-%s
-
-#undef main
-#define main main__2
-
-%s
-
-#undef main
-
-int main() {
-    return main__2();
-}
-
-''' % (ori, main))
         # Compile (-c) original program
-        util.del_file(self.executable())
+        util.del_file('program.exe')
         util.del_file('program.o')
         try:
-            if self.toolkit_mode:
-                self.execute_compiler(
-                    'g++ ' + self.flags2() + ' modified.cc -o ' + self.executable())
-            else:
-                self.execute_compiler('g++ -c ' + self.flags1() + ' program.cc 2> compilation1.txt')
+            self.execute_compiler('g++ -c ' + self.flags1() + ' program.cc 2> compilation1.txt')
         except CompilationTooLong:
-            if self.toolkit_mode:
-                print(Style.BRIGHT + Fore.RED + 'Compilation time exceeded!' + Style.RESET_ALL)
-                util.del_file('modified.cc')
-            else:
-                util.write_file('compilation1.txt', 'Compilation time exceeded')
-                util.del_file('program.o')
-            util.del_file(self.executable())
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.o')
             return False
         if not util.file_exists('program.o'):
             return False
@@ -2514,26 +2402,11 @@ class Compiler_MakePRO2 (Compiler):
         self.execute_monitor(tst, './program.exe')
 
 
-def compiler(cpl, handler=None, name='program', toolkit_mode=False):
+def compiler(cpl, handler=None):
     '''Returns a compiler for cpl.'''
 
     cpl = cpl.replace('++', 'XX')
-    return eval('Compiler_%s(handler, name, toolkit_mode)' % cpl)
-
-
-# toolkit function only
-def compiler_extensions(handler_compiler):
-    '''Returns the info on all the compilers.'''
-
-    r = {}
-    for x in compilers:
-        ext = compiler(x).extension()
-        if x == handler_compiler:
-            r[ext] = x
-        elif 'Run' not in x and ext not in r:
-            # Python3 has priority over RunPython and GHC has priority over RunHaskell
-            r[ext] = x
-    return r
+    return eval('Compiler_%s(handler)' % cpl)
 
 
 def info():
