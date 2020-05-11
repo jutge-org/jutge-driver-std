@@ -4,7 +4,7 @@ import os
 import os.path
 import stat
 
-path = '/usr/bin/local/vinga'
+path = '/usr/local/bin/jutge-vinga'
 
 
 def exists():
