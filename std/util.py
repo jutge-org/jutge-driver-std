@@ -1,10 +1,8 @@
-
 ##############################################################################
 # Importations
 ##############################################################################
 
 import base64
-import subprocess
 import fcntl
 import getpass
 import glob
@@ -13,16 +11,16 @@ import logging
 import optparse
 import os
 import pwd
-import resource
 import shutil
 import signal
 import socket
-import stat
+import subprocess
 import sys
 import tarfile
 import tempfile
 import time
 import traceback
+
 import yaml
 
 
@@ -36,7 +34,7 @@ def init_logging():
 
     logging.basicConfig(
         format='%s@%s ' % (username(), hostname())
-        + '%(asctime)s %(levelname)s %(message)s',
+               + '%(asctime)s %(levelname)s %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
     )
     logging.getLogger('').setLevel(logging.NOTSET)
@@ -249,7 +247,7 @@ def get_from_tgz(tgz, name):
     return r
 
 
-_dirs = []      # direectory stack for pushd and popd
+_dirs = []  # direectory stack for pushd and popd
 
 
 def pushd(path=None):

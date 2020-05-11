@@ -1,16 +1,15 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-import os
-import sys
-import time
-import subprocess
-import signal
-import logging
-import math
-import glob
-import util
-import monitor
 import codecs
+import glob
+import logging
+import os
+import signal
+import subprocess
+import time
+
+import monitor
+import util
 
 # Maximum time to compile
 max_compilation_time = 30
@@ -18,82 +17,81 @@ max_compilation_time = 30
 # List of available compilers (will be filled)
 compilers = []
 
+
 # Exceptions:
 
-
-class CompilationTooLong (Exception):
+class CompilationTooLong(Exception):
     pass
 
 
-class ExecutionError (Exception):
+class ExecutionError(Exception):
     pass
 
 
-class CompilationError (Exception):
+class CompilationError(Exception):
     pass
 
 
 class Compiler:
-
-    '''Compiler base class (abstract).'''
+    """Compiler base class (abstract)."""
 
     def __init__(self, handler):
         self.handler = handler
 
     def name(self):
-        '''Returns the compiler name.'''
+        """Returns the compiler name."""
         raise Exception('Abstract method')
 
     def id(self):
-        '''Returns the compiler id (automatically computed from its class name).'''
+        """Returns the compiler id (automatically computed from its class name)."""
         return self.__class__.__name__.replace('Compiler_', '').replace('XX', '++')
 
     def type(self):
-        '''Returns the compiler type (compiler, interpreter, ...).'''
+        """Returns the compiler type (compiler, interpreter, ...)."""
         raise Exception('Abstract method')
 
     def warning(self):
-        '''Returns some warning associated to the compiler.'''
+        """Returns some warning associated to the compiler."""
         return ""
 
     def executable(self):
-        '''Returns the file name of the resulting "executable".'''
+        """Returns the file name of the resulting "executable"."""
         raise Exception('Abstract method')
 
     def prepare_execution(self, ori):
-        '''Copies the necessary files from ori to . to prepare the execution.'''
+        """Copies the necessary files from ori to . to prepare the execution."""
         raise Exception('Abstract method')
 
     def language(self):
-        '''Returns the language name.'''
+        """Returns the language name."""
         raise Exception('Abstract method')
 
     def version(self):
-        '''Returns the version of this compiler.'''
+        """Returns the version of this compiler."""
         raise Exception('Abstract method')
 
     def flags1(self):
-        '''Returns flags for the first compilation.'''
+        """Returns flags for the first compilation."""
         raise Exception('Abstract method')
 
     def flags2(self):
-        '''Returns flags for the second compilation (if needed).'''
+        """Returns flags for the second compilation (if needed)."""
         raise Exception('Abstract method')
 
     def extension(self):
-        '''Returns extension of the source files (without dot).'''
+        """Returns extension of the source files (without dot)."""
         raise Exception('Abstract method')
 
     def compile(self):
-        '''Doc missing.'''
+        """Doc missing."""
         raise Exception('Abstract method')
 
     def execute(self, tst):
-        '''Doc missing.'''
+        """Doc missing."""
         raise Exception('Abstract method')
 
     def execute_compiler(self, cmd):
-        '''Executes the command cmd, but controlling the execution time.'''
+        """Executes the command cmd, but controlling the execution time."""
         pid = os.fork()
         if pid == 0:
             # Child
@@ -116,7 +114,7 @@ class Compiler:
             raise CompilationTooLong
 
     def execute_monitor(self, tst, pgm):
-        '''Executes the monitor to run a program. '''
+        """Executes the monitor to run a program. """
 
         # Get options for the monitor
         cpl = self.id()
@@ -137,7 +135,7 @@ class Compiler:
 
         # Prepare the command
         cmd = '%s --basename=%s --maxtime=%i %s %s' \
-            % (monitor.path, tst, maxtime, ops, pgm)
+              % (monitor.path, tst, maxtime, ops, pgm)
 
         # Execute the command and get its result code
         logging.info(cmd)
@@ -150,7 +148,7 @@ class Compiler:
             raise ExecutionError
 
     def get_version(self, cmd, lin):
-        '''Private method to get a particular line from a command output.'''
+        """Private method to get a particular line from a command output."""
         return subprocess.getoutput(cmd).split('\n')[lin].strip()
 
     def info(self):
@@ -167,8 +165,7 @@ class Compiler:
         }
 
 
-class Compiler_GCC (Compiler):
-
+class Compiler_GCC(Compiler):
     compilers.append('GCC')
 
     def name(self):
@@ -202,7 +199,8 @@ class Compiler_GCC (Compiler):
         self.execute_monitor(tst, './program.exe')
 
     def compile(self):
-        if 'source_modifier' in self.handler and (self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
+        if 'source_modifier' in self.handler and (
+                self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
             return self.compile_no_main()
         else:
             return self.compile_normal()
@@ -210,7 +208,8 @@ class Compiler_GCC (Compiler):
     def compile_normal(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gcc ' + self.flags1() + ' program.c -o program.exe -lm 2> compilation1.txt')
+            self.execute_compiler('gcc ' + self.flags1() +
+                                  ' program.c -o program.exe -lm 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -236,7 +235,7 @@ class Compiler_GCC (Compiler):
         ori = util.read_file('program.c')
         main = util.read_file('../problem/main.c')
         util.write_file('program.c',
-                        '''
+                        """
 
 // **************************************************************************
 // Inici codi afegit pel Jutge
@@ -272,12 +271,13 @@ int main() {
 // Final codi afegit pel Jutge
 // **************************************************************************
 
-''' % (ori, main))
+""" % (ori, main))
 
         # Compile modified program
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gcc ' + self.flags2() + ' program.c -o program.exe -lm 2> compilation2.txt')
+            self.execute_compiler('gcc ' + self.flags2() +
+                                  ' program.c -o program.exe -lm 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -290,8 +290,9 @@ int main() {
             util.write_file('compilation1.txt', "Unreported error. ")
             util.del_file('program.exe')
             return False
-class Compiler_GXX (Compiler):
 
+
+class Compiler_GXX(Compiler):
     compilers.append('GXX')
 
     def name(self):
@@ -325,7 +326,8 @@ class Compiler_GXX (Compiler):
         self.execute_monitor(tst, './program.exe')
 
     def compile(self):
-        if 'source_modifier' in self.handler and (self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
+        if 'source_modifier' in self.handler and (
+                self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
             return self.compile_no_main()
         else:
             return self.compile_normal()
@@ -335,7 +337,8 @@ class Compiler_GXX (Compiler):
         # Compile original program
         util.del_file('program.exe')
         try:
-            self.execute_compiler('g++ ' + self.flags1() + ' program.cc -o program.exe 2> compilation1.txt')
+            self.execute_compiler('g++ ' + self.flags1() +
+                                  ' program.cc -o program.exe 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -349,7 +352,7 @@ class Compiler_GXX (Compiler):
         if ori.encode('utf-8').startswith(codecs.BOM_UTF8):
             ori = ori[3:]
         util.write_file('program.cc',
-                        '''
+                        """
 
 #include <iostream>
 #include <unistd.h>
@@ -388,12 +391,13 @@ int main() {
     }
 }
 
-''' % ori)
+""" % ori)
 
         # Compile modified program
         util.del_file('program.exe')
         try:
-            self.execute_compiler('g++ ' + self.flags2() + ' program.cc -o program.exe 2> compilation2.txt')
+            self.execute_compiler('g++ ' + self.flags2() +
+                                  ' program.cc -o program.exe 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -428,7 +432,7 @@ int main() {
             ori = ori[3:]
         main = util.read_file('../problem/main.cc')
         util.write_file('program.cc',
-                        '''
+                        """
 
 // **************************************************************************
 // Inici codi afegit pel Jutge
@@ -480,12 +484,13 @@ int main() {
 // Final codi afegit pel Jutge
 // **************************************************************************
 
-''' % (ori, main))
+""" % (ori, main))
 
         # Compile modified program
         util.del_file('program.exe')
         try:
-            self.execute_compiler('g++ ' + self.flags2() + ' program.cc -o program.exe 2> compilation2.txt')
+            self.execute_compiler('g++ ' + self.flags2() +
+                                  ' program.cc -o program.exe 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -498,8 +503,9 @@ int main() {
             util.write_file('compilation1.txt', "Unreported error. ")
             util.del_file('program.exe')
             return False
-class Compiler_P1XX (Compiler_GXX):
 
+
+class Compiler_P1XX(Compiler_GXX):
     compilers.append('P1XX')
 
     def flags1(self):
@@ -507,8 +513,9 @@ class Compiler_P1XX (Compiler_GXX):
 
     def name(self):
         return 'GNU C++ Compiler with extra flags for beginners'
-class Compiler_GXX11 (Compiler_GXX):
 
+
+class Compiler_GXX11(Compiler_GXX):
     compilers.append('GXX11')
 
     def name(self):
@@ -519,8 +526,9 @@ class Compiler_GXX11 (Compiler_GXX):
 
     def flags2(self):
         return '-D_JUDGE_ -DNDEBUG -O2 -std=c++11'
-class Compiler_GXX17 (Compiler_GXX):
 
+
+class Compiler_GXX17(Compiler_GXX):
     compilers.append('GXX17')
 
     def name(self):
@@ -531,8 +539,9 @@ class Compiler_GXX17 (Compiler_GXX):
 
     def flags2(self):
         return '-D_JUDGE_ -DNDEBUG -O2 -std=c++17'
-class Compiler_GPC (Compiler):
 
+
+class Compiler_GPC(Compiler):
     compilers.append('GPC')
 
     def name(self):
@@ -568,7 +577,8 @@ class Compiler_GPC (Compiler):
             self.execute_compiler('gpc -c ' + self.flags1() + ' program.pas 2> compilation1.txt')
             if not util.file_exists('program.o'):
                 return False
-            self.execute_compiler('g++ program.o -L/usr/lib/gcc/i486-linux-gnu/4.1 -lgpc -o program.exe > linkage.txt 2>&1')
+            self.execute_compiler(
+                'g++ program.o -L/usr/lib/gcc/i486-linux-gnu/4.1 -lgpc -o program.exe > linkage.txt 2>&1')
             if not util.file_exists('program.exe'):
                 util.write_file('compilation1.txt', 'Linkage error')
         except CompilationTooLong:
@@ -579,8 +589,9 @@ class Compiler_GPC (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_GFortran (Compiler):
 
+
+class Compiler_GFortran(Compiler):
     compilers.append('GFortran')
 
     def name(self):
@@ -613,7 +624,8 @@ class Compiler_GFortran (Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gfortran ' + self.flags1() + ' program.f -o program.exe 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler('gfortran ' + self.flags1() +
+                                  ' program.f -o program.exe 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -622,8 +634,9 @@ class Compiler_GFortran (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_GObjC (Compiler):
 
+
+class Compiler_GObjC(Compiler):
     compilers.append('GObjC')
 
     def name(self):
@@ -656,7 +669,8 @@ class Compiler_GObjC (Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gcc ' + self.flags1() + ' program.m -o program.exe 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler('gcc ' + self.flags1() +
+                                  ' program.m -o program.exe 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -665,8 +679,9 @@ class Compiler_GObjC (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_GHC (Compiler):
 
+
+class Compiler_GHC(Compiler):
     compilers.append('GHC')
 
     def name(self):
@@ -705,7 +720,8 @@ class Compiler_GHC (Compiler):
     def compile_normal(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('ghc ' + self.flags1() + ' program.hs -o program.exe 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler('ghc ' + self.flags1() +
+                                  ' program.hs -o program.exe 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -723,7 +739,8 @@ class Compiler_GHC (Compiler):
 
         util.del_file('program.exe')
         try:
-            self.execute_compiler('ghc ' + self.flags1() + ' program.hs -o program.exe 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler('ghc ' + self.flags1() +
+                                  ' program.hs -o program.exe 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -732,8 +749,9 @@ class Compiler_GHC (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_RunHaskell (Compiler):
 
+
+class Compiler_RunHaskell(Compiler):
     compilers.append('RunHaskell')
 
     def name(self):
@@ -790,7 +808,8 @@ class Compiler_RunHaskell (Compiler):
                 else:
                     print("    print (%s)" % line, file=f)
             f.close()
-            self.execute_compiler('ghc  -main-is mainjutgeorg ' + self.flags1() + ' work.hs -o work.exe 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler('ghc  -main-is mainjutgeorg ' + self.flags1() +
+                                  ' work.hs -o work.exe 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -807,8 +826,9 @@ class Compiler_RunHaskell (Compiler):
             print("execution: EE", file=f)
             print("execution_error: Cannot test", file=f)
             f.close()
-class Compiler_RunPython (Compiler):
 
+
+class Compiler_RunPython(Compiler):
     compilers.append('RunPython')
 
     def name(self):
@@ -843,7 +863,8 @@ class Compiler_RunPython (Compiler):
     def compile(self):
         util.del_file('compilation1.txt')
         try:
-            self.execute_compiler('../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler(
+                '../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -867,7 +888,7 @@ class Compiler_RunPython (Compiler):
 
         # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
 
-        wrapper = '''
+        wrapper = """
 
 import os, sys, signal
 
@@ -877,7 +898,7 @@ try:
 except:
     os.kill(os.getpid(), signal.SIGUSR2)
 
-'''
+"""
 
         if self.compile_with(tst + ".inp"):
 
@@ -885,7 +906,7 @@ except:
             os.mkdir('subdir')
             util.copy_file('work.py', 'subdir')
 
-            self.execute_monitor(tst, '/usr/bin/python3 wrapper.py')
+            self.execute_monitor(tst, '/usr/bin/env python3 wrapper.py')
 
         else:
             # hack to get required files
@@ -895,8 +916,9 @@ except:
             print("execution: EE", file=f)
             print("execution_error: Cannot test", file=f)
             f.close()
-class Compiler_GDC (Compiler):
 
+
+class Compiler_GDC(Compiler):
     compilers.append('GDC')
 
     def name(self):
@@ -929,7 +951,8 @@ class Compiler_GDC (Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gdc ' + self.flags1() + ' program.d -o program.exe 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler('gdc ' + self.flags1() +
+                                  ' program.d -o program.exe 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -938,8 +961,9 @@ class Compiler_GDC (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_F2C (Compiler):
 
+
+class Compiler_F2C(Compiler):
     compilers.append('F2C')
 
     def name(self):
@@ -987,8 +1011,9 @@ class Compiler_F2C (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_P2C (Compiler):
 
+
+class Compiler_P2C(Compiler):
     compilers.append('P2C')
 
     def name(self):
@@ -1036,8 +1061,9 @@ class Compiler_P2C (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_Stalin (Compiler):
 
+
+class Compiler_Stalin(Compiler):
     compilers.append('Stalin')
 
     def name(self):
@@ -1085,8 +1111,9 @@ class Compiler_Stalin (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_Chicken (Compiler):
 
+
+class Compiler_Chicken(Compiler):
     compilers.append('Chicken')
 
     def name(self):
@@ -1130,8 +1157,9 @@ class Compiler_Chicken (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_GCJ (Compiler):
 
+
+class Compiler_GCJ(Compiler):
     compilers.append('GCJ')
 
     def name(self):
@@ -1164,7 +1192,8 @@ class Compiler_GCJ (Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gcj ' + self.flags1() + ' program.java -o program.exe 2> compilation1.txt')
+            self.execute_compiler('gcj ' + self.flags1() +
+                                  ' program.java -o program.exe 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -1173,8 +1202,9 @@ class Compiler_GCJ (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_GNAT (Compiler):
 
+
+class Compiler_GNAT(Compiler):
     compilers.append('GNAT')
 
     def name(self):
@@ -1207,7 +1237,8 @@ class Compiler_GNAT (Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gnat make ' + self.flags1() + ' program.ada -o program.exe 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler('gnat make ' + self.flags1() +
+                                  ' program.ada -o program.exe 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -1216,8 +1247,9 @@ class Compiler_GNAT (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_FPC (Compiler):
 
+
+class Compiler_FPC(Compiler):
     compilers.append('FPC')
 
     def name(self):
@@ -1250,7 +1282,8 @@ class Compiler_FPC (Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('fpc ' + self.flags1() + ' program.pas -oprogram.exe > compilation1.txt')
+            self.execute_compiler('fpc ' + self.flags1() +
+                                  ' program.pas -oprogram.exe > compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -1259,8 +1292,9 @@ class Compiler_FPC (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_FBC (Compiler):
 
+
+class Compiler_FBC(Compiler):
     compilers.append('FBC')
 
     def name(self):
@@ -1295,7 +1329,8 @@ class Compiler_FBC (Compiler):
         util.del_file('program.exe')
         util.del_file('program')
         try:
-            self.execute_compiler('fbc ' + self.flags1() + ' program.bas 1> compilation1.txt 2> /dev/null')
+            self.execute_compiler('fbc ' + self.flags1() +
+                                  ' program.bas 1> compilation1.txt 2> /dev/null')
             if not util.file_exists('program'):
                 return False
             else:
@@ -1309,8 +1344,9 @@ class Compiler_FBC (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_JDK (Compiler):
 
+
+class Compiler_JDK(Compiler):
     compilers.append('JDK')
 
     def name(self):
@@ -1394,7 +1430,7 @@ class Compiler_JDK (Compiler):
         # Prepare the command
         cls = "JudgeMain"
         cmd = '%s --basename=%s --maxtime=10 %s %s -- /usr/bin/java %s %s' \
-            % (monitor.path, tst, ops, opsX, opsJ, cls)
+              % (monitor.path, tst, ops, opsX, opsJ, cls)
 
         # Execute the command and get its result code
         # Because JDK does not like to have its path blocked, the directory cannot be in
@@ -1420,8 +1456,9 @@ class Compiler_JDK (Compiler):
         # exit
         if r != 0:
             raise ExecutionError
-class Compiler_MonoCS (Compiler):
 
+
+class Compiler_MonoCS(Compiler):
     compilers.append('MonoCS')
 
     def name(self):
@@ -1454,7 +1491,8 @@ class Compiler_MonoCS (Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('mcs ' + self.flags1() + ' program.cs 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler('mcs ' + self.flags1() +
+                                  ' program.cs 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -1463,8 +1501,9 @@ class Compiler_MonoCS (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, 'mono ./program.exe')
-class Compiler_Python (Compiler):
 
+
+class Compiler_Python(Compiler):
     compilers.append('Python')
 
     def name(self):
@@ -1497,7 +1536,8 @@ class Compiler_Python (Compiler):
     def compile(self):
         util.del_file('compilation1.txt')
         try:
-            self.execute_compiler('../driver/etc/py2c.py program.py 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler(
+                '../driver/etc/py2c.py program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1507,7 +1547,7 @@ class Compiler_Python (Compiler):
 
         # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
 
-        wrapper = '''
+        wrapper = """
 
 import os, sys, signal
 
@@ -1517,14 +1557,15 @@ try:
 except:
     os.kill(os.getpid(), signal.SIGUSR2)
 
-'''
+"""
         util.write_file('wrapper.py', wrapper)
         os.mkdir('subdir')
         util.copy_file('program.py', 'subdir')
 
         self.execute_monitor(tst, '/usr/bin/python wrapper.py')
-class Compiler_Python3 (Compiler):
 
+
+class Compiler_Python3(Compiler):
     compilers.append('Python3')
 
     def name(self):
@@ -1555,7 +1596,8 @@ class Compiler_Python3 (Compiler):
         return 'py'
 
     def compile(self):
-        if 'source_modifier' in self.handler and (self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
+        if 'source_modifier' in self.handler and (
+                self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
             return self.compile_no_main()
         else:
             return self.compile_normal()
@@ -1563,7 +1605,8 @@ class Compiler_Python3 (Compiler):
     def compile_normal(self):
         util.del_file('compilation1.txt')
         try:
-            self.execute_compiler('../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler(
+                '../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1572,7 +1615,8 @@ class Compiler_Python3 (Compiler):
     def compile_no_main(self):
         util.del_file('compilation1.txt')
         try:
-            self.execute_compiler('../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+            self.execute_compiler(
+                '../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1588,7 +1632,8 @@ class Compiler_Python3 (Compiler):
         # Compile modified program
         util.del_file('compilation2.txt')
         try:
-            self.execute_compiler('../driver/etc/py3c.py program.py 1> /dev/null 2> compilation2.txt')
+            self.execute_compiler(
+                '../driver/etc/py3c.py program.py 1> /dev/null 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1598,7 +1643,7 @@ class Compiler_Python3 (Compiler):
 
         # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
 
-        wrapper = '''
+        wrapper = """
 
 import os, sys, signal
 
@@ -1608,14 +1653,15 @@ try:
 except:
     os.kill(os.getpid(), signal.SIGUSR2)
 
-'''
+"""
         util.write_file('wrapper.py', wrapper)
         os.mkdir('subdir')
         util.copy_file('program.py', 'subdir')
 
-        self.execute_monitor(tst, '/usr/bin/python3 wrapper.py')
-class Compiler_Perl (Compiler):
+        self.execute_monitor(tst, '/usr/bin/env python3 wrapper.py')
 
+
+class Compiler_Perl(Compiler):
     compilers.append('Perl')
 
     def name(self):
@@ -1646,7 +1692,8 @@ class Compiler_Perl (Compiler):
         return 'pl'
 
     def compile(self):
-        self.execute_compiler('perl -c ' + self.flags1() + ' program.pl 1> /dev/null 2> compilation1.txt')
+        self.execute_compiler('perl -c ' + self.flags1() +
+                              ' program.pl 1> /dev/null 2> compilation1.txt')
         if util.read_file('compilation1.txt').strip() != 'program.pl syntax OK':
             return False
         util.del_file('compilation1.txt')
@@ -1654,8 +1701,9 @@ class Compiler_Perl (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, ' /usr/bin/perl program.pl')
-class Compiler_Lua (Compiler):
 
+
+class Compiler_Lua(Compiler):
     compilers.append('Lua')
 
     def name(self):
@@ -1687,13 +1735,15 @@ class Compiler_Lua (Compiler):
 
     def compile(self):
         util.del_file('program.luac')
-        self.execute_compiler('luac ' + self.flags1() + ' -o program.luac program.lua 1> /dev/null 2> compilation1.txt')
+        self.execute_compiler('luac ' + self.flags1() +
+                              ' -o program.luac program.lua 1> /dev/null 2> compilation1.txt')
         return util.file_exists('program.luac')
 
     def execute(self, tst):
         self.execute_monitor(tst, ' /usr/bin/lua program.luac')
-class Compiler_R (Compiler):
 
+
+class Compiler_R(Compiler):
     compilers.append('R')
 
     def name(self):
@@ -1732,7 +1782,7 @@ class Compiler_R (Compiler):
     def compile_normal(self):
         util.del_file('compilation1.txt')
         try:
-            s = file("program.R").read()
+            s = open("program.R").read()
             s = """
 
 wrapper_R <- function() {
@@ -1761,8 +1811,9 @@ wrapper_R <- function() {
     def execute(self, tst):
         util.copy_file("../../driver/etc/executer.R", ".")
         self.execute_monitor(tst, ' --maxprocs=100 /usr/bin/Rscript executer.R')
-class Compiler_Ruby (Compiler):
 
+
+class Compiler_Ruby(Compiler):
     compilers.append('Ruby')
 
     def name(self):
@@ -1801,8 +1852,9 @@ class Compiler_Ruby (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, ' /usr/bin/ruby program.rb')
-class Compiler_Guile (Compiler):
 
+
+class Compiler_Guile(Compiler):
     compilers.append('Guile')
 
     def name(self):
@@ -1839,8 +1891,9 @@ class Compiler_Guile (Compiler):
     def execute(self, tst):
         # !!! I had to add --maxfiles
         self.execute_monitor(tst, ' --maxfiles=7 /usr/bin/guile program.scm')
-class Compiler_Erlang (Compiler):
 
+
+class Compiler_Erlang(Compiler):
     compilers.append('Erlang')
 
     def name(self):
@@ -1872,14 +1925,17 @@ class Compiler_Erlang (Compiler):
 
     def compile(self):
         util.del_file('program.beam')
-        self.execute_compiler('erlc ' + self.flags1() + ' program.erl 2> /dev/null 1> compilation1.txt')
+        self.execute_compiler('erlc ' + self.flags1() +
+                              ' program.erl 2> /dev/null 1> compilation1.txt')
         return util.file_exists('program.beam')
 
     def execute(self, tst):
         # !!! I had to add --maxfiles
-        self.execute_monitor(tst, ' --maxfiles=30 -- /usr/bin/erl -noshell -s program start -s init stop')
-class Compiler_BEEF (Compiler):
+        self.execute_monitor(
+            tst, ' --maxfiles=30 -- /usr/bin/erl -noshell -s program start -s init stop')
 
+
+class Compiler_BEEF(Compiler):
     # Hack: copy program.bf to /tmp because otherwise we have permission
 
     compilers.append('BEEF')
@@ -1917,8 +1973,9 @@ class Compiler_BEEF (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, ' /usr/bin/beef /tmp/program.bf')
-class Compiler_WS (Compiler):
 
+
+class Compiler_WS(Compiler):
     compilers.append('WS')
 
     def name(self):
@@ -1954,8 +2011,9 @@ class Compiler_WS (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, ' /usr/bin/wspace program.ws')
-class Compiler_PHP (Compiler):
 
+
+class Compiler_PHP(Compiler):
     compilers.append('PHP')
 
     def name(self):
@@ -1986,7 +2044,8 @@ class Compiler_PHP (Compiler):
         return 'php'
 
     def compile(self):
-        self.execute_compiler('php --syntax-check ' + self.flags1() + ' program.php > compilation1.txt')
+        self.execute_compiler('php --syntax-check ' + self.flags1() +
+                              ' program.php > compilation1.txt')
         if util.read_file('compilation1.txt').strip() != 'No syntax errors detected in program.php':
             return False
         util.del_file('compilation1.txt')
@@ -1994,8 +2053,9 @@ class Compiler_PHP (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, ' /usr/bin/php program.php')
-class Compiler_nodejs (Compiler):
 
+
+class Compiler_nodejs(Compiler):
     compilers.append('nodejs')
 
     def name(self):
@@ -2029,11 +2089,10 @@ class Compiler_nodejs (Compiler):
         return True
 
     def execute(self, tst):
-#        self.execute_monitor(tst, ' --maxprocs=100 --maxmem=1024:1024 /usr/bin/node program.js')
+        #        self.execute_monitor(tst, ' --maxprocs=100 --maxmem=1024:1024 /usr/bin/node program.js')
 
         cmd = '%s --basename=%s --maxprocs=100 --maxmem=1024:1024 -- /usr/bin/node program.js' \
-            % (monitor.path, tst)
-
+              % (monitor.path, tst)
 
         # Execute the command and get its result code
         # Because JDK does not like to have its path blocked, the directory cannot be in
@@ -2060,8 +2119,9 @@ class Compiler_nodejs (Compiler):
         # exit
         if r != 0:
             raise ExecutionError
-class Compiler_Go (Compiler):
 
+
+class Compiler_Go(Compiler):
     compilers.append('Go')
 
     def name(self):
@@ -2094,7 +2154,8 @@ class Compiler_Go (Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('go build -o program.exe ' + self.flags1() + ' program.go 2> compilation1.txt')
+            self.execute_compiler('go build -o program.exe ' +
+                                  self.flags1() + ' program.go 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -2103,8 +2164,9 @@ class Compiler_Go (Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_CLISP (Compiler):
 
+
+class Compiler_CLISP(Compiler):
     compilers.append('CLISP')
 
     def name(self):
@@ -2137,7 +2199,8 @@ class Compiler_CLISP (Compiler):
     def compile(self):
         util.del_file('program.fas')
         try:
-            self.execute_compiler('clisp -c ' + self.flags1() + ' program.lisp >/dev/null 2> compilation1.txt')
+            self.execute_compiler('clisp -c ' + self.flags1() +
+                                  ' program.lisp >/dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.fas')
@@ -2148,8 +2211,9 @@ class Compiler_CLISP (Compiler):
     def execute(self, tst):
         # clisp opens some auxiliar files???
         self.execute_monitor(tst, ' --maxfiles=8 /usr/bin/clisp program.fas')
-class Compiler_Verilog (Compiler):
 
+
+class Compiler_Verilog(Compiler):
     compilers.append('Verilog')
 
     def name(self):
@@ -2181,13 +2245,15 @@ class Compiler_Verilog (Compiler):
 
     def compile(self):
         util.del_file('program.vvp')
-        self.execute_compiler('/usr/local/bin/iverilog-0.8 -o program.vvp ' + self.flags1() + ' program.v 2> compilation1.txt')
+        self.execute_compiler('/usr/local/bin/iverilog-0.8 -o program.vvp ' +
+                              self.flags1() + ' program.v 2> compilation1.txt')
         return util.file_exists('program.vvp')
 
     def execute(self, tst):
         self.execute_monitor(tst, ' /usr/local/bin/vvp-0.8 program.vvp')
-class Compiler_PRO2 (Compiler):
 
+
+class Compiler_PRO2(Compiler):
     compilers.append('PRO2')
 
     def name(self):
@@ -2258,7 +2324,7 @@ class Compiler_PRO2 (Compiler):
         os.mkdir("program.dir")
         os.chdir("program.dir")
         util.write_file('__judge_main.cc',
-                        '''
+                        """
 
 #include <iostream>
 #include <unistd.h>
@@ -2285,7 +2351,7 @@ int main() {
         raise(SIGUSR2);
     }
 }
-''')
+""")
 
         try:
             if util.file_exists('../../problem/public.tar'):
@@ -2316,8 +2382,9 @@ int main() {
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
-class Compiler_MakePRO2 (Compiler):
 
+
+class Compiler_MakePRO2(Compiler):
     compilers.append('MakePRO2')
 
     def name(self):
@@ -2359,13 +2426,15 @@ class Compiler_MakePRO2 (Compiler):
         os.chdir("program.dir")
 
         if not util.file_exists('../program.tar'):
-            util.write_file("../compilation1.txt", "Could not find submission. Please report this error.")
+            util.write_file("../compilation1.txt",
+                            "Could not find submission. Please report this error.")
             os.chdir('..')
             return False
 
         typ = util.command('file -b ../program.tar')
         if typ != "POSIX tar archive (GNU)" and typ != "POSIX tar archive":
-            util.write_file("../compilation1.txt", "Submission is not a tar archive (identification: '%s')" % typ)
+            util.write_file("../compilation1.txt",
+                            "Submission is not a tar archive (identification: '%s')" % typ)
             os.chdir('..')
             return False
 
@@ -2403,14 +2472,14 @@ class Compiler_MakePRO2 (Compiler):
 
 
 def compiler(cpl, handler=None):
-    '''Returns a compiler for cpl.'''
+    """Returns a compiler for cpl."""
 
     cpl = cpl.replace('++', 'XX')
     return eval('Compiler_%s(handler)' % cpl)
 
 
 def info():
-    '''Returns the info on all the compilers.'''
+    """Returns the info on all the compilers."""
 
     r = {}
     for x in compilers:

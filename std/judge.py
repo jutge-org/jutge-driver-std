@@ -1,21 +1,19 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-import os
-import os.path
-import sys
-import time
-import copy
 import glob
+import json
 import logging
 import math
+import os
+import os.path
 import re
-import pprint
+import sys
 import traceback
-import json
-import util
-import monitor
-import compilers
+
 import checkers
+import compilers
+import monitor
+import util
 
 
 class Judge:
@@ -28,7 +26,7 @@ class Judge:
         logging.info('<<<< end with veredict %s >>>>' % self.cor.veredict)
 
     def init_phase(self):
-        '''Initializes the data structures of the Judge object.'''
+        """Initializes the data structures of the Judge object."""
 
         logging.info('**** init phase ****')
 
@@ -53,8 +51,8 @@ class Judge:
 
         self.cor = Record()
         self.sol = Record()
-        self.pha = None                 # will point to self.cor or self.sol latter on
-        self.phase = None               # will be 'solution' or 'correction' latter on
+        self.pha = None  # will point to self.cor or self.sol latter on
+        self.phase = None  # will be 'solution' or 'correction' latter on
 
         for x in [self.cor, self.sol]:
             x.veredict = 'IE'
@@ -75,7 +73,7 @@ class Judge:
                 x.tests[t] = {}
 
     def solution_phase(self):
-        '''Judges the reference solution.'''
+        """Judges the reference solution."""
 
         logging.info('**** solution phase ****')
 
@@ -92,7 +90,7 @@ class Judge:
         self.output_step()
 
     def correction_phase(self):
-        '''Judges the candidate solution.'''
+        """Judges the candidate solution."""
 
         logging.info('**** correction phase ****')
 
@@ -191,7 +189,7 @@ class Judge:
         return ok
 
     def choose_solution_compiler(self):
-        '''Returns the best matched compiler among the possible ones in the solution for the compiler selected in the submission.'''
+        """Returns the best matched compiler among the possible ones in the solution for the compiler selected in the submission."""
 
         # get requested compiler and its entension
         cpl = self.get('compiler_id')
@@ -340,7 +338,7 @@ class Judge:
                 inf['veredict'] = '??'
             elif util.file_exists(test + ".exc"):
                 inf['veredict'] = 'EE'
-                inf['veredict_info'] = "Uncaught exception " + file(test + ".exc").readline().strip()
+                inf['veredict_info'] = "Uncaught exception " + open(test + ".exc").readline().strip()
             elif inf['execution'] == 'EE':
                 inf['veredict'] = 'EE'
                 inf['veredict_info'] = inf['execution_error']
@@ -361,7 +359,8 @@ class Judge:
                     self.pha.checking.separator2 = separator2 = self.get('separator2')
                     self.pha.checking.starting = starting = self.get('starting')
                     self.pha.checking.ending = ending = self.get('ending')
-                    ver = checkers.double_elastic(out, cor, separator1, separator2, starting, ending, presentation_error)
+                    ver = checkers.double_elastic(out, cor, separator1, separator2, starting, ending,
+                                                  presentation_error)
                 elif checker == 'external':
                     self.pha.checking.external_program = external_program = self.get('external_program')
                     self.pha.checking.external_timeout = external_timeout = self.get('external_timeout', 5)
@@ -471,7 +470,7 @@ class Judge:
                     util.del_file(f)
 
     def get_tests(self):
-        '''Returns the list of tests, in sorted order, with sample* first.'''
+        """Returns the list of tests, in sorted order, with sample* first."""
 
         # get the tests without extensions nor paths
         tests = [
@@ -507,7 +506,7 @@ class Judge:
             raise Exception('missing option (%s)' % opt)
         info = str(val) + ' (' + whe + ')'
         # if opt not in self.wrk['used_options'] or self.wrk['used_options'][opt] != info:
-        #self.wrk['used_options'][opt] = info
+        # self.wrk['used_options'][opt] = info
         logging.info('   > using %s for %s from %s' % (str(val), opt, whe))
         return val
 
@@ -536,8 +535,8 @@ def todict(obj, classkey=None):
         return [todict(v, classkey) for v in obj]
     elif hasattr(obj, "__dict__"):
         data = dict([(key, todict(value, classkey))
-            for key, value in obj.__dict__.items()
-            if not callable(value) and not key.startswith('_')])
+                     for key, value in obj.__dict__.items()
+                     if not callable(value) and not key.startswith('_')])
         if classkey is not None and hasattr(obj, "__class__"):
             data[classkey] = obj.__class__.__name__
         return data
@@ -546,7 +545,7 @@ def todict(obj, classkey=None):
 
 
 class Record:
-    '''Just to have an object to fill with fields.'''
+    """Just to have an object to fill with fields."""
     pass
 
 
