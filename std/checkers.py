@@ -5,7 +5,7 @@ import re
 import time
 import signal
 
-import util
+from jutge import util
 
 """
 Checker functions are used to check that a generated output file is correct with
@@ -232,25 +232,25 @@ def double_elastic2(file1, file2, sep1, sep2, ini, fin):
 
     list1p = []
     for x in list1:
-        m = re.match('^%s(.*)%s$' % (ini, fin), x, re.DOTALL)
+        m = re.match(r'^%s(.*)%s$' % (ini, fin), x, re.DOTALL)
         if not m:
             return 'WA'
-        list1p.append(util.sort(m.group(1).split(sep2)))
+        list1p.append(sorted(m.group(1).split(sep2)))
 
     list2p = []
     for x in list2:
-        m = re.match('^%s(.*)%s$' % (ini, fin), x, re.DOTALL)
+        m = re.match(r'^%s(.*)%s$' % (ini, fin), x, re.DOTALL)
         if not m:
             return 'IE'
-        list2p.append(util.sort(m.group(1).split(sep2)))
+        list2p.append(sorted(m.group(1).split(sep2)))
 
     list1p.sort()
     list2p.sort()
     if list1p == list2p:
         return 'PE' if pe else 'AC'
 
-    list1s = [util.sort([normalization(y) for y in x]) for x in list1p]
-    list2s = [util.sort([normalization(y) for y in x]) for x in list2p]
+    list1s = [sorted([normalization(y) for y in x]) for x in list1p]
+    list2s = [sorted([normalization(y) for y in x]) for x in list2p]
     list1s.sort()
     list2s.sort()
     if list1s == list2s:
@@ -295,7 +295,7 @@ def external(pgm, inp, out, cor, tim=5):
         The external checker is used to check for outputs using an external
         program that reads the input and the generated output and writes
         to stdout the veredict. If the program runs for more than tim seconds,
-        'IE' is returned. 'IE' also returned for nonexisting pgm.
+        'IE' is returned. 'IE' also returned for non-existing pgm.
     """
 
     if not util.file_exists(pgm):
