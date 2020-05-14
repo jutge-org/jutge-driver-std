@@ -295,6 +295,9 @@ int main() {
 class Compiler_GXX(Compiler):
     compilers.append('GXX')
 
+    def gxx(self):
+        return 'g++-9'
+
     def name(self):
         return 'GNU C++ Compiler'
 
@@ -311,7 +314,7 @@ class Compiler_GXX(Compiler):
         return 'C++'
 
     def version(self):
-        return self.get_version('g++ --version', 0)
+        return self.get_version('{self.gxx()} --version', 0)
 
     def flags1(self):
         return '-D_JUDGE_ -DNDEBUG -O2'
@@ -327,7 +330,8 @@ class Compiler_GXX(Compiler):
 
     def compile(self):
         if 'source_modifier' in self.handler and (
-                self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
+                self.handler['source_modifier'] == 'no_main' or
+                self.handler['source_modifier'] == 'structs'):
             return self.compile_no_main()
         else:
             return self.compile_normal()
@@ -337,8 +341,8 @@ class Compiler_GXX(Compiler):
         # Compile original program
         util.del_file('program.exe')
         try:
-            self.execute_compiler('g++ ' + self.flags1() +
-                                  ' program.cc -o program.exe 2> compilation1.txt')
+            self.execute_compiler(
+                f'{self.gxx()} {self.flags1()} program.cc -o program.exe 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -348,56 +352,28 @@ class Compiler_GXX(Compiler):
 
         # Modify the program
         util.copy_file('program.cc', 'original.cc')
-        ori = util.read_file('program.cc')
-        if ori.encode('utf-8').startswith(codecs.BOM_UTF8):
-            ori = ori[3:]
-        util.write_file('program.cc',
-                        """
+        original = util.read_file('original.cc')
+        if original.encode('utf-8').startswith(codecs.BOM_UTF8):
+            original = original[3:]
+        stub = util.read_file('../driver/etc/cc/stub.cc')
+        program = f'''
 
-#include <iostream>
-#include <unistd.h>
-#include <signal.h>
+{original}
 
-using namespace std;
+// START STUB **************************
 
-#define main main__2
+{stub}
 
-// **************************************************************************
-// Begin original code
-// **************************************************************************
+// END STUB ****************************
 
-%s
-
-// **************************************************************************
-// End original code
-// **************************************************************************
-
-#undef main
-
-
-
-int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(0);
-
-    try {
-        return main__2();
-    } catch (bad_alloc& judge__e) {
-        raise(SIGUSR1);
-    } catch (exception& judge__e) {
-        raise(SIGUSR2);
-    } catch (...) {
-        raise(SIGUSR2);
-    }
-}
-
-""" % ori)
+        '''
+        util.write_file('program.cc', program)
 
         # Compile modified program
         util.del_file('program.exe')
         try:
-            self.execute_compiler('g++ ' + self.flags2() +
-                                  ' program.cc -o program.exe 2> compilation2.txt')
+            self.execute_compiler(
+                f'{self.gxx()} {self.flags2()} program.cc -o program.exe 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -417,7 +393,8 @@ int main() {
         util.del_file('program.exe')
         util.del_file('program.o')
         try:
-            self.execute_compiler('g++ -c ' + self.flags1() + ' program.cc 2> compilation1.txt')
+            self.execute_compiler(
+                f'{self.gxx()} -c {self.flags1()} program.cc 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.o')
@@ -427,70 +404,40 @@ int main() {
 
         # Modify the program
         util.copy_file('program.cc', 'original.cc')
-        ori = util.read_file('program.cc')
-        if ori.encode('utf-8').startswith(codecs.BOM_UTF8):
-            ori = ori[3:]
+        original = util.read_file('original.cc')
+        if original.encode('utf-8').startswith(codecs.BOM_UTF8):
+            original = original[3:]
         main = util.read_file('../problem/main.cc')
-        util.write_file('program.cc',
-                        """
+        stub = util.read_file('../driver/etc/cc/stub.cc')
+        program = f'''
 
-// **************************************************************************
-// Inici codi afegit pel Jutge
-// **************************************************************************
+#define main jutge__replaced__main
 
-#define main main__3
-
-// **************************************************************************
-// Final codi afegit pel Jutge
-// **************************************************************************
-
-
-%s
-
-
-
-// **************************************************************************
-// Inici codi afegit pel Jutge
-// **************************************************************************
-
-#undef main
-#define main main__2
-
-%s
+{original}
 
 #undef main
 
-#include <iostream>
-#include <unistd.h>
-#include <signal.h>
+// START MAIN **************************
+
+{main}
+
+// END MAIN ****************************
 
 
-int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(0);
+// START STUB **************************
 
-    try {
-        return main__2();
-    } catch (bad_alloc& judge__e) {
-        raise(SIGUSR1);
-    } catch (exception& judge__e) {
-        raise(SIGUSR2);
-    } catch (...) {
-        raise(SIGUSR2);
-    }
-}
+{stub}
 
-// **************************************************************************
-// Final codi afegit pel Jutge
-// **************************************************************************
+// END STUB ****************************
 
-""" % (ori, main))
+        '''
+        util.write_file('program.cc', program)
 
         # Compile modified program
         util.del_file('program.exe')
         try:
-            self.execute_compiler('g++ ' + self.flags2() +
-                                  ' program.cc -o program.exe 2> compilation2.txt')
+            self.execute_compiler(
+                f'{self.gxx()} {self.flags2()} program.cc -o program.exe 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
