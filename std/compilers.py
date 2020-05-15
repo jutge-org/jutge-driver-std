@@ -236,46 +236,26 @@ class Compiler_GenericC(Compiler):
 
         # Modify the program
         util.copy_file('program.c', 'original.c')
-        ori = util.read_file('program.c')
+        original = util.read_file('original.c')
+        if original.encode('utf-8').startswith(codecs.BOM_UTF8):
+            original = original[3:]
         main = util.read_file('../problem/main.c')
-        util.write_file('program.c',
-                        """
+        program = f'''
 
-// **************************************************************************
-// Inici codi afegit pel Jutge
-// **************************************************************************
+#define main jutge__replaced__main
 
-#define main main__3
-
-// **************************************************************************
-// Final codi afegit pel Jutge
-// **************************************************************************
-
-
-%s
-
-
-
-// **************************************************************************
-// Inici codi afegit pel Jutge
-// **************************************************************************
-
-#undef main
-#define main main__2
-
-%s
+{original}
 
 #undef main
 
-int main() {
-    return main__2();
-}
+// START MAIN **************************
 
-// **************************************************************************
-// Final codi afegit pel Jutge
-// **************************************************************************
+{main}
 
-""" % (ori, main))
+// END MAIN ****************************
+
+        '''
+        util.write_file('program.c', program)
 
         # Compile modified program
         util.del_file('program.exe')
