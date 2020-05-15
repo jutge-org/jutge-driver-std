@@ -8,7 +8,7 @@ import signal
 import subprocess
 import time
 
-import monitor
+from . import monitor
 from jutge import util
 
 # Maximum time to compile
@@ -2293,11 +2293,6 @@ class Compiler_PRO2(Compiler):
             elif util.file_exists('../../problem/solution.hh'):
                 util.copy_file('../program.cc', 'program.hh')
 
-            if 0:
-                os.system("ls -laR")
-                os.system("ls -laR ..")
-                os.system("ls -laR ../..")
-
             self.execute_compiler(
                 # compte que abaix esta repetit!!!
                 'g++ ' + self.flags1() + ' *.cc -o ../program.exe 2> ../compilation1.txt'
@@ -2356,11 +2351,6 @@ int main() {
                 util.copy_file('../program.cc', 'program.cc')
             elif util.file_exists('../../problem/solution.hh'):
                 util.copy_file('../program.cc', 'program.hh')
-
-            if 0:
-                os.system("ls -laR")
-                os.system("ls -laR ..")
-                os.system("ls -laR ../..")
 
             self.execute_compiler(
                 'g++ -Dmain=main__2 ' + self.flags2() + ' *.cc -o ../program.exe 2> ../compilation2.txt'
@@ -2424,7 +2414,7 @@ class Compiler_MakePRO2(Compiler):
             os.chdir('..')
             return False
 
-        typ = util.command('file -b ../program.tar')
+        typ = subprocess.getoutput('file -b ../program.tar')
         if typ != "POSIX tar archive (GNU)" and typ != "POSIX tar archive":
             util.write_file("../compilation1.txt",
                             "Submission is not a tar archive (identification: '%s')" % typ)
