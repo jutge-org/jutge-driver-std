@@ -149,7 +149,10 @@ class Compiler:
 
     def get_version(self, cmd, lin):
         """Private method to get a particular line from a command output."""
-        return subprocess.getoutput(cmd).split('\n')[lin].strip()
+        try:
+            return subprocess.getoutput(cmd).split('\n')[lin].strip()
+        except:
+            return None
 
     def info(self):
         return {
@@ -165,11 +168,10 @@ class Compiler:
         }
 
 
-class Compiler_GCC(Compiler):
-    compilers.append('GCC')
+class Compiler_GenericC(Compiler):
 
-    def name(self):
-        return 'GNU C Compiler'
+    def cmd(self):
+        raise Exception('Abstract method')
 
     def type(self):
         return 'compiler'
@@ -184,7 +186,7 @@ class Compiler_GCC(Compiler):
         return 'C'
 
     def version(self):
-        return self.get_version('gcc --version', 0)
+        return self.get_version(f'{self.cmd()} --version', 0)
 
     def flags1(self):
         return '-D_JUDGE_ -DNDEBUG -O2'
@@ -200,7 +202,8 @@ class Compiler_GCC(Compiler):
 
     def compile(self):
         if 'source_modifier' in self.handler and (
-                self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
+                self.handler['source_modifier'] == 'no_main' or
+                self.handler['source_modifier'] == 'structs'):
             return self.compile_no_main()
         else:
             return self.compile_normal()
@@ -208,8 +211,8 @@ class Compiler_GCC(Compiler):
     def compile_normal(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gcc ' + self.flags1() +
-                                  ' program.c -o program.exe -lm 2> compilation1.txt')
+            self.execute_compiler(
+                f'{self.cmd()} {self.flags1()} program.c -o program.exe -lm 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -222,7 +225,8 @@ class Compiler_GCC(Compiler):
         util.del_file('program.exe')
         util.del_file('program.o')
         try:
-            self.execute_compiler('gcc -c ' + self.flags1() + ' program.c 2> compilation1.txt')
+            self.execute_compiler(
+                f'{self.cmd()} -c {self.flags1()} program.c 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.o')
@@ -276,8 +280,8 @@ int main() {
         # Compile modified program
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gcc ' + self.flags2() +
-                                  ' program.c -o program.exe -lm 2> compilation2.txt')
+            self.execute_compiler(
+                f'{self.cmd()} {self.flags2()} program.c -o program.exe -lm 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -292,14 +296,30 @@ int main() {
             return False
 
 
-class Compiler_GXX(Compiler):
-    compilers.append('GXX')
+class Compiler_GCC(Compiler_GenericC):
+    compilers.append('GCC')
 
-    def gxx(self):
-        return 'g++-9'
+    def cmd(self):
+        return 'gcc-9'
 
     def name(self):
-        return 'GNU C++ Compiler'
+        return 'GNU C Compiler'
+
+
+class Compiler_Clang(Compiler_GenericC):
+    compilers.append('Clang')
+
+    def cmd(self):
+        return 'clang'
+
+    def name(self):
+        return 'Clang C Compiler'
+
+
+class Compiler_GenericCXX(Compiler):
+
+    def cmd(self):
+        raise Exception('Abstract method')
 
     def type(self):
         return 'compiler'
@@ -314,13 +334,7 @@ class Compiler_GXX(Compiler):
         return 'C++'
 
     def version(self):
-        return self.get_version('{self.gxx()} --version', 0)
-
-    def flags1(self):
-        return '-D_JUDGE_ -DNDEBUG -O2'
-
-    def flags2(self):
-        return '-D_JUDGE_ -DNDEBUG -O2'
+        return self.get_version(f'{self.cmd()} --version', 0)
 
     def extension(self):
         return 'cc'
@@ -342,7 +356,7 @@ class Compiler_GXX(Compiler):
         util.del_file('program.exe')
         try:
             self.execute_compiler(
-                f'{self.gxx()} {self.flags1()} program.cc -o program.exe 2> compilation1.txt')
+                f'{self.cmd()} {self.flags1()} program.cc -o program.exe 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -373,7 +387,7 @@ class Compiler_GXX(Compiler):
         util.del_file('program.exe')
         try:
             self.execute_compiler(
-                f'{self.gxx()} {self.flags2()} program.cc -o program.exe 2> compilation2.txt')
+                f'{self.cmd()} {self.flags2()} program.cc -o program.exe 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -394,7 +408,7 @@ class Compiler_GXX(Compiler):
         util.del_file('program.o')
         try:
             self.execute_compiler(
-                f'{self.gxx()} -c {self.flags1()} program.cc 2> compilation1.txt')
+                f'{self.cmd()} -c {self.flags1()} program.cc 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.o')
@@ -437,7 +451,7 @@ class Compiler_GXX(Compiler):
         util.del_file('program.exe')
         try:
             self.execute_compiler(
-                f'{self.gxx()} {self.flags2()} program.cc -o program.exe 2> compilation2.txt')
+                f'{self.cmd()} {self.flags2()} program.cc -o program.exe 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -450,6 +464,22 @@ class Compiler_GXX(Compiler):
             util.write_file('compilation1.txt', "Unreported error. ")
             util.del_file('program.exe')
             return False
+
+
+class Compiler_GXX(Compiler_GenericCXX):
+    compilers.append('GXX')
+
+    def cmd(self):
+        return 'g++-9'
+
+    def name(self):
+        return 'GNU C++ Compiler'
+
+    def flags1(self):
+        return '-D_JUDGE_ -DNDEBUG -O2'
+
+    def flags2(self):
+        return '-D_JUDGE_ -DNDEBUG -O2'
 
 
 class Compiler_P1XX(Compiler_GXX):
@@ -480,6 +510,22 @@ class Compiler_GXX17(Compiler_GXX):
 
     def name(self):
         return 'GNU C++17 Compiler'
+
+    def flags1(self):
+        return '-D_JUDGE_ -DNDEBUG -O2 -std=c++17'
+
+    def flags2(self):
+        return '-D_JUDGE_ -DNDEBUG -O2 -std=c++17'
+
+
+class Compiler_ClangXX17(Compiler_GenericCXX):
+    compilers.append('ClangXX17')
+
+    def cmd(self):
+        return 'clang++'
+
+    def name(self):
+        return 'Clang C++17 Compiler'
 
     def flags1(self):
         return '-D_JUDGE_ -DNDEBUG -O2 -std=c++17'
