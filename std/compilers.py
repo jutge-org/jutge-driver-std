@@ -10,7 +10,7 @@ import time
 
 from jutge import util
 
-from . import monitor
+import monitor
 
 # Maximum time to compile
 max_compilation_time = 30
