@@ -11,6 +11,8 @@ import time
 import monitor
 from jutge import util
 
+import monitor
+
 # Maximum time to compile
 max_compilation_time = 30
 
@@ -30,6 +32,16 @@ class ExecutionError(Exception):
 
 class CompilationError(Exception):
     pass
+
+
+# Helper functions
+
+def read_without_bom(path):
+    """Return the contents of file at path and removes the BOM if present."""
+    content = util.read_file(path)
+    if content.encode('utf-8').startswith(codecs.BOM_UTF8):
+        content = content[3:]
+    return content
 
 
 class Compiler:
@@ -236,9 +248,7 @@ class Compiler_GenericC(Compiler):
 
         # Modify the program
         util.copy_file('program.c', 'original.c')
-        original = util.read_file('original.c')
-        if original.encode('utf-8').startswith(codecs.BOM_UTF8):
-            original = original[3:]
+        original = read_without_bom('original.c')
         main = util.read_file('../problem/main.c')
         program = f'''
 
@@ -346,9 +356,7 @@ class Compiler_GenericCXX(Compiler):
 
         # Modify the program
         util.copy_file('program.cc', 'original.cc')
-        original = util.read_file('original.cc')
-        if original.encode('utf-8').startswith(codecs.BOM_UTF8):
-            original = original[3:]
+        original = read_without_bom('original.cc')
         stub = util.read_file('../driver/etc/cc/stub.cc')
         program = f'''
 
@@ -398,9 +406,7 @@ class Compiler_GenericCXX(Compiler):
 
         # Modify the program
         util.copy_file('program.cc', 'original.cc')
-        original = util.read_file('original.cc')
-        if original.encode('utf-8').startswith(codecs.BOM_UTF8):
-            original = original[3:]
+        original = read_without_bom('original.cc')
         main = util.read_file('../problem/main.cc')
         stub = util.read_file('../driver/etc/cc/stub.cc')
         program = f'''
