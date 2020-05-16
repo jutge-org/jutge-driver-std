@@ -5,7 +5,6 @@
 #include <signal.h>
 
 // the following code will be executed if main throws an exception
-
 [[noreturn]] void jutge__stub__on_terminate() noexcept
 {
     if (auto exc = std::current_exception()) {
@@ -23,9 +22,8 @@
     std::_Exit(0);
 }
 
-// the following code will be executed before main
-
-const int jutge__stub__before_main = []()
+// the following function should be executed before main
+int jutge__stub__initialization()
 {
     // handle exception from main
     std::set_terminate(&jutge__stub__on_terminate);
@@ -36,5 +34,7 @@ const int jutge__stub__before_main = []()
 
     // return something
     return 999;
-}();
+}
 
+// the following global variable gets initialized before main
+int jutge__stub__initialization_global_variable = jutge__stub__initialization();

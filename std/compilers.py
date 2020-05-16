@@ -8,7 +8,7 @@ import signal
 import subprocess
 import time
 
-from . import monitor
+import monitor
 from jutge import util
 
 # Maximum time to compile
