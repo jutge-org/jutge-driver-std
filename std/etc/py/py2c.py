@@ -1,4 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/python
+
+# Python2 script that is used to check the correctness of the submission
 
 import py_compile
 import sys

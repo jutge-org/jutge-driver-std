@@ -1,3 +1,6 @@
+// Wrapper for C++ compiler that uses some tweaks to
+// speed up the program execution and catches several
+// exceptions and give an accurate verdict.
 
 #include <cstdlib>
 #include <exception>

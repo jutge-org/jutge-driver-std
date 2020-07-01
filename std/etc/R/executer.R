@@ -1,3 +1,5 @@
+# R script that will execute the submission in order to
+# catch several exceptions and give an accurate verdict.
 
 #Perform all R commands
 main_wrapper_R <- function() {

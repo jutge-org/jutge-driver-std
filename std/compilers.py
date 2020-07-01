@@ -248,22 +248,14 @@ class Compiler_GenericC(Compiler):
         util.copy_file('program.c', 'original.c')
         original = read_without_bom('original.c')
         main = util.read_file('../problem/main.c')
-        program = f'''
 
-#define main jutge__replaced__main
-
-{original}
-
-#undef main
-
-// START MAIN **************************
-
-{main}
-
-// END MAIN ****************************
-
-        '''
-        util.write_file('program.c', program)
+        util.copy_file("../driver/etc/c/program.c", ".")
+        with open("program.c", "r+") as f:
+            program = f.read()
+            f.truncate(0)
+            program = program.replace('{original}', original)
+            program = program.replace('{main}', main)
+            f.write(program)
 
         # Compile modified program
         util.del_file('program.exe')
@@ -356,18 +348,13 @@ class Compiler_GenericCXX(Compiler):
         util.copy_file('program.cc', 'original.cc')
         original = read_without_bom('original.cc')
         stub = util.read_file('../driver/etc/cc/stub.cc')
-        program = f'''
-
-{original}
-
-// START STUB **************************
-
-{stub}
-
-// END STUB ****************************
-
-        '''
-        util.write_file('program.cc', program)
+        util.copy_file("../driver/etc/cc/normal.cc", "./program.cc")
+        with open("program.cc", "r+") as f:
+            program = f.read()
+            f.truncate(0)
+            program = program.replace('{original}', original)
+            program = program.replace('{stub}', stub)
+            f.write(program)
 
         # Compile modified program
         util.del_file('program.exe')
@@ -407,29 +394,14 @@ class Compiler_GenericCXX(Compiler):
         original = read_without_bom('original.cc')
         main = util.read_file('../problem/main.cc')
         stub = util.read_file('../driver/etc/cc/stub.cc')
-        program = f'''
-
-#define main jutge__replaced__main
-
-{original}
-
-#undef main
-
-// START MAIN **************************
-
-{main}
-
-// END MAIN ****************************
-
-
-// START STUB **************************
-
-{stub}
-
-// END STUB ****************************
-
-        '''
-        util.write_file('program.cc', program)
+        util.copy_file("../driver/etc/cc/nomain.cc", "./program.cc")
+        with open("program.cc", "r+") as f:
+            program = f.read()
+            f.truncate(0)
+            program = program.replace('{original}', original)
+            program = program.replace('{main}', main)
+            program = program.replace('{stub}', stub)
+            f.write(program)
 
         # Compile modified program
         util.del_file('program.exe')
@@ -841,7 +813,7 @@ class Compiler_RunPython(Compiler):
         util.del_file('compilation1.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+                '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -855,31 +827,16 @@ class Compiler_RunPython(Compiler):
             if util.file_exists("judge.py"):
                 os.system("cat judge.py >> work.py")
             os.system("cat %s >> work.py" % extra)
-            self.execute_compiler('../driver/etc/py2c.py work.py 1> /dev/null 2> compilation2.txt')
+            self.execute_compiler('../driver/etc/py/py2c.py work.py 1> /dev/null 2> compilation2.txt')
             return True
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
         return False
 
     def execute(self, tst):
-
-        # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
-
-        wrapper = """
-
-import os, sys, signal
-
-try:
-    sys.path = ['subdir'] + sys.path
-    import work
-except:
-    os.kill(os.getpid(), signal.SIGUSR2)
-
-"""
-
         if self.compile_with(tst + ".inp"):
-
-            util.write_file('wrapper.py', wrapper)
+            # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
+            util.copy_file("../driver/etc/py/runpython_wrapper.py", "./wrapper.py")
             os.mkdir('subdir')
             util.copy_file('work.py', 'subdir')
 
@@ -1514,28 +1471,15 @@ class Compiler_Python(Compiler):
         util.del_file('compilation1.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py2c.py program.py 1> /dev/null 2> compilation1.txt')
+                '../driver/etc/py/py2c.py program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
         return util.file_size('compilation1.txt') == 0
 
     def execute(self, tst):
-
         # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
-
-        wrapper = """
-
-import os, sys, signal
-
-try:
-    sys.path = ['subdir'] + sys.path
-    import program
-except:
-    os.kill(os.getpid(), signal.SIGUSR2)
-
-"""
-        util.write_file('wrapper.py', wrapper)
+        util.copy_file("../driver/etc/py/python_wrapper.py", "./wrapper.py")
         os.mkdir('subdir')
         util.copy_file('program.py', 'subdir')
 
@@ -1583,7 +1527,7 @@ class Compiler_Python3(Compiler):
         util.del_file('compilation1.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+                '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1593,7 +1537,7 @@ class Compiler_Python3(Compiler):
         util.del_file('compilation1.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+                '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1610,28 +1554,15 @@ class Compiler_Python3(Compiler):
         util.del_file('compilation2.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py3c.py program.py 1> /dev/null 2> compilation2.txt')
+                '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
         return util.file_size('compilation2.txt') == 0
 
     def execute(self, tst):
-
         # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
-
-        wrapper = """
-
-import os, sys, signal
-
-try:
-    sys.path = ['subdir'] + sys.path
-    import program
-except:
-    os.kill(os.getpid(), signal.SIGUSR2)
-
-"""
-        util.write_file('wrapper.py', wrapper)
+        util.copy_file("../driver/etc/py/python_wrapper.py", "./wrapper.py")
         os.mkdir('subdir')
         util.copy_file('program.py', 'subdir')
 
@@ -1760,17 +1691,14 @@ class Compiler_R(Compiler):
         util.del_file('compilation1.txt')
         try:
             s = open("program.R").read()
-            s = """
+            util.copy_file("../driver/etc/R/wrapper.R", ".")
+            with open("program.R", "r+") as f:
+                program = f.read()
+                f.truncate(0)
+                program = program.replace('{s}', s)
+                f.write(program)
 
-wrapper_R <- function() {
-
-%s
-
-}
-
-""" % s
-            util.write_file("wrapper.R", s)
-            util.copy_file("../driver/etc/compiler.R", ".")
+            util.copy_file("../driver/etc/R/compiler.R", ".")
             self.execute_compiler('Rscript compiler.R 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
@@ -1786,7 +1714,7 @@ wrapper_R <- function() {
         return True
 
     def execute(self, tst):
-        util.copy_file("../../driver/etc/executer.R", ".")
+        util.copy_file("../../driver/etc/R/executer.R", ".")
         self.execute_monitor(tst, ' --maxprocs=100 /usr/bin/Rscript executer.R')
 
 
@@ -2295,35 +2223,7 @@ class Compiler_PRO2(Compiler):
         util.del_dir("program.dir")
         os.mkdir("program.dir")
         os.chdir("program.dir")
-        util.write_file('__judge_main.cc',
-                        """
-
-#include <iostream>
-#include <unistd.h>
-#include <signal.h>
-
-using namespace std;
-
-#undef main
-
-int main__2 ();
-
-
-int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(0);
-
-    try {
-        return main__2();
-    } catch (bad_alloc& judge__e) {
-        raise(SIGUSR1);
-    } catch (exception& judge__e) {
-        raise(SIGUSR2);
-    } catch (...) {
-        raise(SIGUSR2);
-    }
-}
-""")
+        util.copy_file("../driver/etc/PRO2/__judge_main.cc", ".")
 
         try:
             if util.file_exists('../../problem/public.tar'):
