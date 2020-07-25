@@ -7,6 +7,7 @@ import os
 import signal
 import subprocess
 import time
+import shutil
 
 import monitor
 from jutge import util
@@ -836,7 +837,7 @@ class Compiler_RunPython(Compiler):
     def execute(self, tst):
         if self.compile_with(tst + ".inp"):
             # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
-            util.copy_file("../driver/etc/py/runpython_wrapper.py", "./wrapper.py")
+            util.copy_file("../../driver/etc/py/runpython_wrapper.py", "./wrapper.py")
             os.mkdir('subdir')
             util.copy_file('work.py', 'subdir')
 
@@ -1479,7 +1480,7 @@ class Compiler_Python(Compiler):
 
     def execute(self, tst):
         # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
-        util.copy_file("../driver/etc/py/python_wrapper.py", "./wrapper.py")
+        util.copy_file("../../driver/etc/py/python_wrapper.py", "./wrapper.py")
         os.mkdir('subdir')
         util.copy_file('program.py', 'subdir')
 
@@ -1562,7 +1563,7 @@ class Compiler_Python3(Compiler):
 
     def execute(self, tst):
         # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
-        util.copy_file("../driver/etc/py/python_wrapper.py", "./wrapper.py")
+        util.copy_file("../../driver/etc/py/python_wrapper.py", "./wrapper.py")
         os.mkdir('subdir')
         util.copy_file('program.py', 'subdir')
 
@@ -2332,6 +2333,144 @@ class Compiler_MakePRO2(Compiler):
 
         util.del_dir("program.dir")
 
+        return util.file_exists('program.exe')
+
+    def execute(self, tst):
+        self.execute_monitor(tst, './program.exe')
+
+
+class Compiler_Rust(Compiler):
+    compilers.append('Rust')
+
+    def name(self):
+        return 'Rust'
+
+    def type(self):
+        return 'compiler'
+
+    def executable(self):
+        return 'program.exe'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Rust'
+
+    def version(self):
+        return self.get_version('rustc --version', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'rs'
+
+    def compile(self):
+        util.del_file('program.exe')
+        try:
+            self.execute_compiler('rustc -o program.exe ' +
+                                  self.flags1() + ' program.rs 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
+            return False
+        return util.file_exists('program.exe')
+
+    def execute(self, tst):
+        self.execute_monitor(tst, './program.exe')
+
+
+class Compiler_Crystal(Compiler):
+    compilers.append('Crystal')
+
+    def name(self):
+        return 'Crystal'
+
+    def type(self):
+        return 'compiler'
+
+    def executable(self):
+        return 'program.exe'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Crystal'
+
+    def version(self):
+        return self.get_version('crystal -v', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'cr'
+
+    def compile(self):
+        util.del_file('program.exe')
+        try:
+            self.execute_compiler('crystal build -o program.exe ' +
+                                  self.flags1() + ' program.cr 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
+            return False
+        return util.file_exists('program.exe')
+
+    def execute(self, tst):
+        self.execute_monitor(tst, './program.exe')
+
+
+class Compiler_Nim(Compiler):
+    compilers.append('Nim')
+
+    def name(self):
+        return 'Nim'
+
+    def type(self):
+        return 'compiler'
+
+    def executable(self):
+        return 'program.exe'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Nim'
+
+    def version(self):
+        return self.get_version('nim -v', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'nim'
+
+    def compile(self):
+        util.del_file('program.exe')
+        try:
+            self.execute_compiler('nim c -o:program.exe ' +
+                                  self.flags1() + ' program.nim 1> /dev/null 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
+            shutil.rmtree('nimcache')
+            return False
+
+        shutil.rmtree('nimcache')
         return util.file_exists('program.exe')
 
     def execute(self, tst):

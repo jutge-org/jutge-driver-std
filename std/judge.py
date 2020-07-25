@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 
-import glob
-import json
-import logging
-import math
 import os
 import os.path
-import re
 import sys
+import glob
+import logging
+import math
+import re
 import traceback
+import json
 
-import checkers
 import compilers
-import monitor
-from jutge import util
+import checkers
 
+from jutge import util
+import monitor
 
 class Judge:
 
@@ -535,8 +535,8 @@ def todict(obj, classkey=None):
         return [todict(v, classkey) for v in obj]
     elif hasattr(obj, "__dict__"):
         data = dict([(key, todict(value, classkey))
-                     for key, value in obj.__dict__.items()
-                     if not callable(value) and not key.startswith('_')])
+        for key, value in obj.__dict__.items()
+            if not callable(value) and not key.startswith('_')])
         if classkey is not None and hasattr(obj, "__class__"):
             data[classkey] = obj.__class__.__name__
         return data
