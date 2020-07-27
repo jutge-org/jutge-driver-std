@@ -427,7 +427,7 @@ class Compiler_GXX(Compiler_GenericCXX):
     compilers.append('GXX')
 
     def cmd(self):
-        return 'g++-9'
+        return 'g++'
 
     def name(self):
         return 'GNU C++ Compiler'
