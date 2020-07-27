@@ -281,7 +281,7 @@ class Compiler_GCC(Compiler_GenericC):
     compilers.append('GCC')
 
     def cmd(self):
-        return 'gcc-9'
+        return 'gcc'
 
     def name(self):
         return 'GNU C Compiler'
@@ -2475,6 +2475,98 @@ class Compiler_Nim(Compiler):
 
     def execute(self, tst):
         self.execute_monitor(tst, './program.exe')
+
+
+class Compiler_Julia(Compiler):
+    compilers.append('Julia')
+
+    def name(self):
+        return 'Julia'
+
+    def type(self):
+        return 'interpreter'
+
+    def executable(self):
+        return 'program.jl'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Julia'
+
+    def version(self):
+        return self.get_version('julia -v', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'jl'
+
+    def compile(self):
+        util.del_file('program.exe')
+        try:
+            self.execute_compiler('julia ' +
+                                  self.flags1() + ' program.jl 1> /dev/null 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
+            return False
+
+        return util.file_size('compilation1.txt') == 0
+
+    def execute(self, tst):
+        self.execute_monitor(tst, 'julia program.jl')
+
+
+class Compiler_Kotlin(Compiler):
+    compilers.append('Kotlin')
+
+    def name(self):
+        return 'Kotlin'
+
+    def type(self):
+        return 'interpreter'
+
+    def executable(self):
+        return 'program.kt'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Kotlin'
+
+    def version(self):
+        return self.get_version('kotlinc -version', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'kt'
+
+    def compile(self):
+        util.del_file('program.exe')
+        try:
+            self.execute_compiler('kotlinc ' +
+                                  self.flags1() + ' program.kt 1> /dev/null 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
+            return False
+
+        return util.file_size('compilation1.txt') == 0
+
+    def execute(self, tst):
+        self.execute_monitor(tst, 'kotlinc program.kt')
 
 
 def compiler(cpl, handler=None):
