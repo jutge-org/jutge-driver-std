@@ -253,10 +253,11 @@ class Compiler_GenericC(Compiler):
         util.copy_file("../driver/etc/c/program.c", ".")
         with open("program.c", "r+") as f:
             program = f.read()
-            f.truncate(0)
+            f.seek(0)
             program = program.replace('{original}', original)
             program = program.replace('{main}', main)
             f.write(program)
+            f.truncate()
 
         # Compile modified program
         util.del_file('program.exe')
@@ -352,10 +353,11 @@ class Compiler_GenericCXX(Compiler):
         util.copy_file("../driver/etc/cc/normal.cc", "./program.cc")
         with open("program.cc", "r+") as f:
             program = f.read()
-            f.truncate(0)
+            f.seek(0)
             program = program.replace('{original}', original)
             program = program.replace('{stub}', stub)
             f.write(program)
+            f.truncate()
 
         # Compile modified program
         util.del_file('program.exe')
@@ -398,11 +400,12 @@ class Compiler_GenericCXX(Compiler):
         util.copy_file("../driver/etc/cc/nomain.cc", "./program.cc")
         with open("program.cc", "r+") as f:
             program = f.read()
-            f.truncate(0)
+            f.seek(0)
             program = program.replace('{original}', original)
             program = program.replace('{main}', main)
             program = program.replace('{stub}', stub)
             f.write(program)
+            f.truncate()
 
         # Compile modified program
         util.del_file('program.exe')
@@ -1693,11 +1696,12 @@ class Compiler_R(Compiler):
         try:
             s = open("program.R").read()
             util.copy_file("../driver/etc/R/wrapper.R", ".")
-            with open("program.R", "r+") as f:
+            with open("wrapper.R", "r+") as f:
                 program = f.read()
-                f.truncate(0)
+                f.seek(0)
                 program = program.replace('{s}', s)
                 f.write(program)
+                f.truncate()
 
             util.copy_file("../driver/etc/R/compiler.R", ".")
             self.execute_compiler('Rscript compiler.R 1> /dev/null 2> compilation1.txt')
@@ -1716,7 +1720,7 @@ class Compiler_R(Compiler):
 
     def execute(self, tst):
         util.copy_file("../../driver/etc/R/executer.R", ".")
-        self.execute_monitor(tst, ' --maxprocs=100 /usr/bin/Rscript executer.R')
+        self.execute_monitor(tst, ' --maxprocs=100 --maxfiles=180 /usr/bin/Rscript executer.R')
 
 
 class Compiler_Ruby(Compiler):
