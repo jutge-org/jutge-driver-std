@@ -1720,7 +1720,7 @@ class Compiler_R(Compiler):
 
     def execute(self, tst):
         util.copy_file("../../driver/etc/R/executer.R", ".")
-        self.execute_monitor(tst, ' --maxprocs=100 --maxfiles=180 /usr/bin/Rscript executer.R')
+        self.execute_monitor(tst, ' --maxprocs=100 --maxfiles=500 /usr/bin/Rscript executer.R')
 
 
 class Compiler_Ruby(Compiler):
