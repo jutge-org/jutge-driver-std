@@ -269,8 +269,45 @@ class Judge:
             cputime = float(self.sol.tests[test]['cputime'])
             clktime = float(self.sol.tests[test]['clktime'])
             filesze = util.file_size('../../problem/%s.cor' % test) / (1024.0 * 1024.0)
-            # !!! A generic way to fix new relative limits should exist
-            cputime = max(0.1, 2.0 * cputime + 0.1)
+
+            slows = 'bf erl js lisp lua php pl py R rb ws'.split()
+            mediums = 'bas cs java scm'.split()
+            fasts = 'ada c cc d f go hs pas'.split()
+
+            list_index = 2
+            if com.extension() in mediums:
+                list_index = 1
+            elif com.extension() in fasts:
+                list_index = 0
+
+            if 'time_factor' in self.hdl:
+                tf_size = len(self.hdl['time_factor'])
+                if tf_size == 1:
+                    mid_tf = self.hdl['time_factor'][0]*5
+                    slow_tf = mid_tf*2
+                    self.hdl['time_factor'].extend([mid_tf, slow_tf])
+                if tf_size == 2:
+                    slow_tf = self.hdl['time_factor'][1]*2
+                    self.hdl['time_factor'].append(slow_tf)
+
+                cputime *= self.hdl['time_factor'][list_index]
+            else:
+                cputime *= 2
+
+            if 'time_constant' in self.hdl:
+                tf_size = len(self.hdl['time_constant'])
+                if tf_size == 1:
+                    mid_tc = self.hdl['time_constant'][0]*5
+                    slow_tc = mid_tc*2
+                    self.hdl['time_constant'].extend([mid_tc, slow_tc])
+                if tf_size == 2:
+                    slow_tc = self.hdl['time_constant'][1]*2
+                    self.hdl['time_constant'].append(slow_tc)
+
+                cputime += self.hdl['time_constant'][list_index]
+            else:
+                cputime += 0.1
+
             if self.pha.compilation.choosen_compiler == 'JDK':
                 cputime = max(0.5, cputime)
             limtime = int(cputime + 1.5)
