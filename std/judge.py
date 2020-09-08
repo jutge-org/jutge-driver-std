@@ -19,6 +19,7 @@ import monitor
 class Judge:
 
     def go(self):
+        logging.getLogger('chardet.charsetprober').setLevel(logging.INFO)
         logging.info('<<<< start >>>>')
         self.init_phase()
         self.solution_phase()
@@ -338,7 +339,7 @@ class Judge:
                 inf['veredict'] = '??'
             elif util.file_exists(test + ".exc"):
                 inf['veredict'] = 'EE'
-                inf['veredict_info'] = "Uncaught exception " + open(test + ".exc").readline().strip()
+                inf['veredict_info'] = "Uncaught exception " + util.read_file(test + ".exc").split()[0]
             elif inf['execution'] == 'EE':
                 inf['veredict'] = 'EE'
                 inf['veredict_info'] = inf['execution_error']

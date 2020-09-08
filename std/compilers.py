@@ -35,14 +35,6 @@ class CompilationError(Exception):
 
 # Helper functions
 
-def read_without_bom(path):
-    """Return the contents of file at path and removes the BOM if present."""
-    content = util.read_file(path)
-    if content.encode('utf-8').startswith(codecs.BOM_UTF8):
-        content = content[3:]
-    return content
-
-
 class Compiler:
     """Compiler base class (abstract)."""
 
@@ -247,7 +239,7 @@ class Compiler_GenericC(Compiler):
 
         # Modify the program
         util.copy_file('program.c', 'original.c')
-        original = read_without_bom('original.c')
+        original = util.read_file('original.c')
         main = util.read_file('../problem/main.c')
 
         util.copy_file("../driver/etc/c/program.c", ".")
@@ -348,7 +340,7 @@ class Compiler_GenericCXX(Compiler):
 
         # Modify the program
         util.copy_file('program.cc', 'original.cc')
-        original = read_without_bom('original.cc')
+        original = util.read_file('original.cc')
         stub = util.read_file('../driver/etc/cc/stub.cc')
         util.copy_file("../driver/etc/cc/normal.cc", "./program.cc")
         with open("program.cc", "r+") as f:
@@ -394,7 +386,7 @@ class Compiler_GenericCXX(Compiler):
 
         # Modify the program
         util.copy_file('program.cc', 'original.cc')
-        original = read_without_bom('original.cc')
+        original = util.read_file('original.cc')
         main = util.read_file('../problem/main.cc')
         stub = util.read_file('../driver/etc/cc/stub.cc')
         util.copy_file("../driver/etc/cc/nomain.cc", "./program.cc")
@@ -2561,7 +2553,7 @@ class Compiler_Kotlin(Compiler):
         util.del_file('program.exe')
         try:
             self.execute_compiler('kotlinc ' +
-                                  self.flags1() + ' program.kt 1> /dev/null 2> compilation1.txt')
+                                  self.flags1() + ' program.kt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
@@ -2570,6 +2562,7 @@ class Compiler_Kotlin(Compiler):
         return util.file_size('compilation1.txt') == 0
 
     def execute(self, tst):
+        os.system('ln -s /opt/.konan ./.konan')
         self.execute_monitor(tst, 'kotlinc program.kt')
 
 
