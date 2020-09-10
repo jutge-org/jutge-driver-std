@@ -2220,21 +2220,36 @@ class Compiler_PRO2(Compiler):
         util.del_dir("program.dir")
         os.mkdir("program.dir")
         os.chdir("program.dir")
-        util.copy_file("../../driver/etc/PRO2/__judge_main.cc", ".")
+
 
         try:
             if util.file_exists('../../problem/public.tar'):
                 os.system('tar xf ../../problem/public.tar')
             if util.file_exists('../../problem/private.tar'):
                 os.system('tar xf ../../problem/private.tar')
-
+            
+            headers = ''
             if util.file_exists('../../problem/solution.cc'):
                 util.copy_file('../program.cc', 'program.cc')
             elif util.file_exists('../../problem/solution.hh'):
                 util.copy_file('../program.cc', 'program.hh')
+                headers = 'program.hh'
+
+            # Modify the program
+            util.copy_file('program.cc', 'original.cc')
+            original = util.read_file('original.cc')
+            stub = util.read_file('../../driver/etc/cc/stub.cc')
+            util.copy_file("../../driver/etc/cc/normal.cc", "./program.cc")
+            with open("program.cc", "r+") as f:
+                program = f.read()
+                f.seek(0)
+                program = program.replace('{original}', original)
+                program = program.replace('{stub}', stub)
+                f.write(program)
+                f.truncate()
 
             self.execute_compiler(
-                'g++ -Dmain=main__2 ' + self.flags2() + ' *.cc -o ../program.exe 2> ../compilation2.txt'
+                'g++ ' + self.flags2() + ' program.cc ' + headers + ' -o ../program.exe 2> ../compilation2.txt'
             )
         except CompilationTooLong:
             os.chdir('..')
