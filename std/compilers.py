@@ -2220,7 +2220,7 @@ class Compiler_PRO2(Compiler):
         util.del_dir("program.dir")
         os.mkdir("program.dir")
         os.chdir("program.dir")
-        util.copy_file("../driver/etc/PRO2/__judge_main.cc", ".")
+        util.copy_file("../../driver/etc/PRO2/__judge_main.cc", ".")
 
         try:
             if util.file_exists('../../problem/public.tar'):
