@@ -2227,17 +2227,16 @@ class Compiler_PRO2(Compiler):
                 os.system('tar xf ../../problem/public.tar')
             if util.file_exists('../../problem/private.tar'):
                 os.system('tar xf ../../problem/private.tar')
-            
+
             headers = ''
             if util.file_exists('../../problem/solution.cc'):
-                util.copy_file('../program.cc', 'program.cc')
+                util.copy_file('../../problem/solution.cc', 'program.cc')
             elif util.file_exists('../../problem/solution.hh'):
-                util.copy_file('../program.cc', 'program.hh')
+                util.copy_file('../../problem/solution.cc', 'program.hh')
                 headers = 'program.hh'
 
             # Modify the program
-            util.copy_file('program.cc', 'original.cc')
-            original = util.read_file('original.cc')
+            original = util.read_file('program.cc')
             stub = util.read_file('../../driver/etc/cc/stub.cc')
             util.copy_file("../../driver/etc/cc/normal.cc", "./program.cc")
             with open("program.cc", "r+") as f:
@@ -2249,7 +2248,7 @@ class Compiler_PRO2(Compiler):
                 f.truncate()
 
             self.execute_compiler(
-                'g++ ' + self.flags2() + ' program.cc ' + headers + ' -o ../program.exe 2> ../compilation2.txt'
+                'g++ ' + self.flags2() + ' *.cc ' + headers + ' -o ../program.exe 2> ../compilation2.txt'
             )
         except CompilationTooLong:
             os.chdir('..')
