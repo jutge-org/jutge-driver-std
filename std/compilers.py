@@ -2230,9 +2230,9 @@ class Compiler_PRO2(Compiler):
 
             headers = ''
             if util.file_exists('../../problem/solution.cc'):
-                util.copy_file('../../problem/solution.cc', 'program.cc')
+                util.copy_file('../program.cc', 'program.cc')
             elif util.file_exists('../../problem/solution.hh'):
-                util.copy_file('../../problem/solution.cc', 'program.hh')
+                util.copy_file('../program.cc', 'program.hh')
                 headers = 'program.hh'
 
             # Modify the program
