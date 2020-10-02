@@ -220,6 +220,9 @@ class Judge:
             if (ext in fasts or ext in mediums) and util.file_exists('../problem/solution.java'):
                 self.sol.compilation.match = 'medium'
                 return compilers.compiler('JDK', self.hdl)
+            if ext in slows and util.file_exists('../problem/solution.R'):
+                self.sol.compilation.match = 'slow'
+                return compilers.compiler('R', self.hdl)
             if util.file_exists('../problem/solution.cc'):
                 self.sol.compilation.match = 'c++ fallback'
                 return compilers.compiler('GXX11', self.hdl)
