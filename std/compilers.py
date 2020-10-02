@@ -2233,10 +2233,12 @@ class Compiler_PRO2(Compiler):
                 util.copy_file('../program.cc', 'program.cc')
             elif util.file_exists('../../problem/solution.hh'):
                 util.copy_file('../program.cc', 'program.hh')
-                headers = 'program.hh'
 
             # Modify the program
-            original = util.read_file('program.cc')
+            try:
+                original = util.read_file('program.cc')
+            except Exception:
+                original = ''
             stub = util.read_file('../../driver/etc/cc/stub.cc')
             util.copy_file("../../driver/etc/cc/normal.cc", "./program.cc")
             with open("program.cc", "r+") as f:
@@ -2248,7 +2250,7 @@ class Compiler_PRO2(Compiler):
                 f.truncate()
 
             self.execute_compiler(
-                'g++ ' + self.flags2() + ' *.cc ' + headers + ' -o ../program.exe 2> ../compilation2.txt'
+                'g++ ' + self.flags2() + ' *.cc -o ../program.exe 2> ../compilation2.txt'
             )
         except CompilationTooLong:
             os.chdir('..')
