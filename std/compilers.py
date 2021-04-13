@@ -2373,10 +2373,10 @@ class Compiler_Rust(Compiler):
         return self.get_version('rustc --version', 0)
 
     def flags1(self):
-        return ''
+        return '-O'
 
     def flags2(self):
-        return ''
+        return '-O'
 
     def extension(self):
         return 'rs'
