@@ -8,6 +8,7 @@ import signal
 import subprocess
 import time
 import shutil
+import turtle_pil
 
 import monitor
 from jutge import util
@@ -1561,8 +1562,12 @@ class Compiler_Python3(Compiler):
         util.copy_file("../../driver/etc/py/python_wrapper.py", "./wrapper.py")
         os.mkdir('subdir')
         util.copy_file('program.py', 'subdir')
+        # hack to use turtle-pil when using turtle
+        shutil.copy(turtle_pil.__file__, 'subdir/turtle.py')
 
         self.execute_monitor(tst, '/usr/bin/env python3 wrapper.py')
+
+        util.del_file('subdir/turtle.py')
 
 
 class Compiler_Perl(Compiler):
@@ -2220,7 +2225,6 @@ class Compiler_PRO2(Compiler):
         util.del_dir("program.dir")
         os.mkdir("program.dir")
         os.chdir("program.dir")
-
 
         try:
             if util.file_exists('../../problem/public.tar'):
