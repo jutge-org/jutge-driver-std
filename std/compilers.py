@@ -129,7 +129,7 @@ class Compiler:
             logging.info("using %s" % (tst + '.' + cpl + '.ops'))
             ops += ' ' + util.read_file(tst + '.' + cpl + '.ops').replace('\n', ' ')
 
-        if cpl in ["Python", "Python3"]:
+        if cpl in ["Python", "Python3", "MyPy"]:
             maxtime = 30
         elif cpl in ["JDK"]:
             maxtime = 10
@@ -1553,6 +1553,115 @@ class Compiler_Python3(Compiler):
                 '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
+            return False
+        return util.file_size('compilation2.txt') == 0
+
+    def execute(self, tst):
+        # under jutge-vinga, for some strange reason, python cannot locate the modules in the current dir, so we move them to a subdir under /tmp.
+
+        ori = os.getcwd()
+        wrk = '/tmp/' + tst + '.workdir'
+        util.del_dir(wrk)
+        os.mkdir(wrk)
+        os.system('cp -r * ' + wrk)
+        os.chdir(wrk)
+        self.execute_monitor(tst, '/usr/bin/python3 program.py')
+        os.system('cp -r * ' + ori)
+        os.chdir(ori)
+
+
+class Compiler_MyPy(Compiler):
+    compilers.append('MyPy')
+
+    def name(self):
+        return 'Python3 Interpreter (with MyPy type checking) EXPERIMENTAL!'
+
+    def type(self):
+        return 'interpreter'
+
+    def executable(self):
+        return 'program.py'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Python'
+
+    def version(self):
+        return self.get_version('python3 -V', 0) + ' ' + self.get_version('mypy -V', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'py'
+
+    def compile(self):
+        if 'source_modifier' in self.handler and (
+                self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
+            return self.compile_no_main()
+        else:
+            return self.compile_normal()
+
+    def compile_normal(self):
+        # py_compile
+        util.del_file('compilation1.txt')
+        try:
+            self.execute_compiler(
+                'python3 -m py_compile program.py 1> /dev/null 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            return False
+        if util.file_size('compilation1.txt') != 0:
+            return False
+
+        # mypy
+        try:
+            self.execute_compiler(
+                'mypy --no-error-summary --ignore-missing-imports --pretty --show-error-codes --show-column-numbers --show-error-context program.py > compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            return False
+        return util.file_size('compilation1.txt') == 0
+
+    def compile_no_main(self):
+        util.del_file('compilation1.txt')
+        try:
+            self.execute_compiler(
+                'python3 -m py_compile program.py 1> /dev/null 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            return False
+        if util.file_size('compilation1.txt') != 0:
+            return False
+
+        # Modify the program
+        util.copy_file('program.py', 'original.py')
+        ori = util.read_file('program.py')
+        main = util.read_file('../problem/main.py')
+        util.write_file('program.py', '%s\n\n\n%s\n' % (ori, main))
+
+        # Compile modified program
+        util.del_file('compilation2.txt')
+        try:
+            self.execute_compiler(
+                'python3 -m py_compile program.py 1> /dev/null 2> compilation2.txt')
+        except CompilationTooLong:
+            util.write_file('compilation2.txt', 'Compilation time exceeded')
+            return False
+        if util.file_size('compilation2.txt') != 0:
+            return False
+
+        # check modified program
+        try:
+            self.execute_compiler(
+                'mypy --no-error-summary --ignore-missing-imports --pretty --show-error-codes --show-column-numbers --show-error-context program.py > compilation2.txt')
+        except CompilationTooLong:
+            util.write_file('compilation2.txt', 'Compilation time exceeded')
             return False
         return util.file_size('compilation2.txt') == 0
 
