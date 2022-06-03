@@ -151,6 +151,21 @@ class Compiler:
         if r != 0:
             raise ExecutionError
 
+    def execute_monitor_in_tmp(self, tst, pgm):
+        """Executes the monitor to run a program using /tmp because of vinga shit. """
+
+        ori = os.getcwd()
+        wrk = '/tmp/monitor.' + tst + '.' + str(uuid.uuid4())[:8]
+        util.del_dir(wrk)
+        os.mkdir(wrk)
+        os.system('cp -r * ' + wrk)
+        os.chdir(wrk)
+        try:
+            self.execute_monitor(tst, pgm)
+        finally:
+            os.system('cp -r * ' + ori)
+            os.chdir(ori)
+
     def get_version(self, cmd, lin):
         """Private method to get a particular line from a command output."""
         try:
@@ -810,7 +825,7 @@ class Compiler_RunPython(Compiler):
         util.del_file('compilation1.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+                'python3 -m py_compile program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -824,7 +839,7 @@ class Compiler_RunPython(Compiler):
             if util.file_exists("judge.py"):
                 os.system("cat judge.py >> work.py")
             os.system("cat %s >> work.py" % extra)
-            self.execute_compiler('../driver/etc/py/py2c.py work.py 1> /dev/null 2> compilation2.txt')
+            self.execute_compiler('python3 -m py_compile work.py 1> /dev/null 2> compilation2.txt')
             return True
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
@@ -837,7 +852,7 @@ class Compiler_RunPython(Compiler):
             os.mkdir('subdir')
             util.copy_file('work.py', 'subdir')
 
-            self.execute_monitor(tst, '/usr/bin/env python3 wrapper.py')
+            self.execute_monitor_in_tmp(tst, '/usr/bin/python3 wrapper.py')
 
         else:
             # hack to get required files
@@ -1435,6 +1450,8 @@ class Compiler_MonoCS(Compiler):
 
 
 class Compiler_Python(Compiler):
+    """Obslote. It is here because of old submissions."""
+
     compilers.append('Python')
 
     def name(self):
@@ -1446,14 +1463,11 @@ class Compiler_Python(Compiler):
     def executable(self):
         return 'program.py'
 
-    def prepare_execution(self, ori):
-        util.copy_file(ori + '/' + self.executable(), '.')
-
     def language(self):
         return 'Python'
 
     def version(self):
-        return self.get_version('python --version', 0)
+        return 'Obsolete'
 
     def flags1(self):
         return ''
@@ -1463,24 +1477,6 @@ class Compiler_Python(Compiler):
 
     def extension(self):
         return 'py'
-
-    def compile(self):
-        util.del_file('compilation1.txt')
-        try:
-            self.execute_compiler(
-                '../driver/etc/py/py2c.py program.py 1> /dev/null 2> compilation1.txt')
-        except CompilationTooLong:
-            util.write_file('compilation1.txt', 'Compilation time exceeded')
-            return False
-        return util.file_size('compilation1.txt') == 0
-
-    def execute(self, tst):
-        # Under vinga, python cannot locate the modules in the current dir, so we move them to a subdir.
-        util.copy_file("../../driver/etc/py/python_wrapper.py", "./wrapper.py")
-        os.mkdir('subdir')
-        util.copy_file('program.py', 'subdir')
-
-        self.execute_monitor(tst, '/usr/bin/python wrapper.py')
 
 
 class Compiler_Python3(Compiler):
@@ -1524,7 +1520,7 @@ class Compiler_Python3(Compiler):
         util.del_file('compilation1.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+                'python3 -m py_compile program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1534,7 +1530,7 @@ class Compiler_Python3(Compiler):
         util.del_file('compilation1.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation1.txt')
+                'python3 -m py_compile program.py 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1551,7 +1547,7 @@ class Compiler_Python3(Compiler):
         util.del_file('compilation2.txt')
         try:
             self.execute_compiler(
-                '../driver/etc/py/py3c.py program.py 1> /dev/null 2> compilation2.txt')
+                'python3 -m py_compile program.py 1> /dev/null 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1670,17 +1666,7 @@ class Compiler_MyPy(Compiler):
         return util.file_size('compilation2.txt') == 0
 
     def execute(self, tst):
-        # under jutge-vinga, for some strange reason, python cannot locate the modules in the current dir, so we move them to a subdir under /tmp.
-
-        ori = os.getcwd()
-        wrk = '/tmp/' + tst + '.workdir'
-        util.del_dir(wrk)
-        os.mkdir(wrk)
-        os.system('cp -r * ' + wrk)
-        os.chdir(wrk)
-        self.execute_monitor(tst, '/usr/bin/python3 program.py')
-        os.system('cp -r * ' + ori)
-        os.chdir(ori)
+        self.execute_monitor_in_tmp(tst, '/usr/bin/python3 program.py')
 
 
 class Compiler_Perl(Compiler):
