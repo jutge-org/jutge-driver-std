@@ -8,6 +8,7 @@ import signal
 import subprocess
 import time
 import shutil
+import uuid
 
 import monitor
 from jutge import util
@@ -1560,12 +1561,15 @@ class Compiler_Python3(Compiler):
         # under jutge-vinga, for some strange reason, python cannot locate the modules in the current dir, so we move them to a subdir under /tmp.
 
         ori = os.getcwd()
-        wrk = '/tmp/' + tst + '.workdir'
+        wrk = '/tmp/' + tst + '.workdir.' + str(uuid.uuid4())[:8]
         util.del_dir(wrk)
         os.mkdir(wrk)
         os.system('cp -r * ' + wrk)
         os.chdir(wrk)
-        self.execute_monitor(tst, '/usr/bin/python3 program.py')
+        try:
+            self.execute_monitor(tst, '/usr/bin/python3 program.py')
+        except ExecutionError:
+            logging.info('ExecutionError at execute_monitor')
         os.system('cp -r * ' + ori)
         os.chdir(ori)
 
