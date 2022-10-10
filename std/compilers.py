@@ -1541,7 +1541,8 @@ class Compiler_Python3(Compiler):
         util.copy_file('program.py', 'original.py')
         ori = util.read_file('program.py')
         main = util.read_file('../problem/main.py')
-        util.write_file('program.py', '%s\n\n\n%s\n' % (ori, main))
+        name = '__name__ = "__jutge__"'
+        util.write_file('program.py', '%s\n\n\n%s\n\n\n%s\n' % (name,ori, main))
 
         # Compile modified program
         util.del_file('compilation2.txt')
@@ -1643,7 +1644,8 @@ class Compiler_MyPy(Compiler):
         util.copy_file('program.py', 'original.py')
         ori = util.read_file('program.py')
         main = util.read_file('../problem/main.py')
-        util.write_file('program.py', '%s\n\n\n%s\n' % (ori, main))
+        name = '__name__ = "__jutge__"'
+        util.write_file('program.py', '%s\n\n\n%s\n\n\n%s\n' % (name,ori, main))
 
         # Compile modified program
         util.del_file('compilation2.txt')
