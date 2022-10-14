@@ -1575,7 +1575,7 @@ class Compiler_MyPy(Compiler):
     compilers.append('MyPy')
 
     def name(self):
-        return 'Python3 Interpreter (with MyPy type checking) EXPERIMENTAL!'
+        return 'Python3 Interpreter (with MyPy type checking)'
 
     def type(self):
         return 'interpreter'
