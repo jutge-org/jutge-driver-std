@@ -12,6 +12,7 @@ import uuid
 
 import monitor
 from jutge import util
+import yogi
 
 # Maximum time to compile
 max_compilation_time = 30
@@ -1542,7 +1543,7 @@ class Compiler_Python3(Compiler):
         ori = util.read_file('program.py')
         main = util.read_file('../problem/main.py')
         name = '__name__ = "__jutge__"'
-        util.write_file('program.py', '%s\n\n\n%s\n\n\n%s\n' % (name,ori, main))
+        util.write_file('program.py', '%s\n\n\n%s\n\n\n%s\n' % (name, ori, main))
 
         # Compile modified program
         util.del_file('compilation2.txt')
@@ -1645,7 +1646,7 @@ class Compiler_MyPy(Compiler):
         ori = util.read_file('program.py')
         main = util.read_file('../problem/main.py')
         name = '__name__ = "__jutge__"'
-        util.write_file('program.py', '%s\n\n\n%s\n\n\n%s\n' % (name,ori, main))
+        util.write_file('program.py', '%s\n\n\n%s\n\n\n%s\n' % (name, ori, main))
 
         # Compile modified program
         util.del_file('compilation2.txt')
@@ -1669,6 +1670,61 @@ class Compiler_MyPy(Compiler):
 
     def execute(self, tst):
         self.execute_monitor_in_tmp(tst, '/usr/bin/python3 program.py')
+
+
+class Compiler_Codon(Compiler):
+    compilers.append('Codon')
+
+    def name(self):
+        return 'Codon'
+
+    def type(self):
+        return 'compiler'
+
+    def executable(self):
+        return 'program'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Python'
+
+    def version(self):
+        return self.get_version('codon --version', 0)
+
+    def flags1(self):
+        return '-release'
+
+    def flags2(self):
+        return '-release'
+
+    def extension(self):
+        return 'codon'
+
+    def compile(self):
+        # TBD: compile no main
+        return self.compile_normal()
+
+    def compile_normal(self):
+        util.del_file('compilation1.txt')
+
+        # hack to use yogi
+        shutil.copy(os.path.dirname(yogi.__file__) + '/yogi.codon', '.')
+
+        try:
+            self.execute_compiler('codon build -exe ' + self.flags1() + ' ' + 'program.codon 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            return False
+        if util.file_size('compilation1.txt') != 0:
+            return False
+        if not util.file_exists(self.executable()):
+            return False
+        return True
+
+    def execute(self, tst):
+        self.execute_monitor_in_tmp(tst, './program')
 
 
 class Compiler_Perl(Compiler):
