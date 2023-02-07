@@ -1703,14 +1703,18 @@ class Compiler_Codon(Compiler):
         return 'codon'
 
     def compile(self):
-        # TBD: compile no main
-        return self.compile_normal()
+        if 'source_modifier' in self.handler and (
+                self.handler['source_modifier'] == 'no_main' or self.handler['source_modifier'] == 'structs'):
+            return self.compile_no_main()
+        else:
+            return self.compile_normal()
 
     def compile_normal(self):
         util.del_file('compilation1.txt')
 
         # hack to use yogi
         shutil.copy(os.path.dirname(yogi.__file__) + '/yogi.codon', '.')
+        shutil.copy(os.path.dirname(yogi.__file__) + '/jutge.codon', '.')
 
         try:
             self.execute_compiler('codon build -exe ' + self.flags1() + ' ' + 'program.codon 2> compilation1.txt')
@@ -1718,6 +1722,42 @@ class Compiler_Codon(Compiler):
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
         if util.file_size('compilation1.txt') != 0:
+            return False
+        if not util.file_exists(self.executable()):
+            return False
+        return True
+
+    def compile_no_main(self):
+
+        # hack to use yogi
+        shutil.copy(os.path.dirname(yogi.__file__) + '/yogi.codon', '.')
+        shutil.copy(os.path.dirname(yogi.__file__) + '/yogi.codon', './jutge.codon')
+
+        util.del_file('compilation1.txt')
+        try:
+            self.execute_compiler(
+                'python3 -m py_compile program.codon 1> /dev/null 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            return False
+        if util.file_size('compilation1.txt') != 0:
+            return False
+
+        # Modify the program
+        util.copy_file('program.codon', 'original.codon')
+        ori = util.read_file('program.codon')
+        main = util.read_file('../problem/main.py')
+        name = '__name__ = "__jutge__"'
+        util.write_file('program.codon', '%s\n\n\n%s\n\n\n%s\n' % (name, ori, main))
+
+        # Compile modified program
+        util.del_file('compilation2.txt')
+        try:
+            self.execute_compiler('codon build -exe ' + self.flags1() + ' ' + 'program.codon 2> compilation2.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            return False
+        if util.file_size('compilation2.txt') != 0:
             return False
         if not util.file_exists(self.executable()):
             return False
