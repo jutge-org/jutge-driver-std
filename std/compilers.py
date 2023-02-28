@@ -136,7 +136,7 @@ class Compiler:
         elif cpl in ["JDK"]:
             maxtime = 10
         else:
-            maxtime = 5
+            maxtime = 6
 
         # Prepare the command
         cmd = '%s --basename=%s --maxtime=%i %s %s' \
@@ -1714,7 +1714,7 @@ class Compiler_Codon(Compiler):
 
         # hack to use yogi
         shutil.copy(os.path.dirname(yogi.__file__) + '/yogi.codon', '.')
-        shutil.copy(os.path.dirname(yogi.__file__) + '/jutge.codon', '.')
+#???        shutil.copy(os.path.dirname(yogi.__file__) + '/jutge.codon', '.')
 
         try:
             self.execute_compiler('codon build -exe ' + self.flags1() + ' ' + 'program.codon 2> compilation1.txt')
