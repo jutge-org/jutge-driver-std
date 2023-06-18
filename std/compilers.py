@@ -1717,7 +1717,7 @@ class Compiler_Codon(Compiler):
 #???        shutil.copy(os.path.dirname(yogi.__file__) + '/jutge.codon', '.')
 
         try:
-            self.execute_compiler('codon build -exe ' + self.flags1() + ' ' + 'program.codon 2> compilation1.txt')
+            self.execute_compiler('codon build -exe ' + self.flags1() + ' ' + 'program.codon > compilation1.txt 2>&1')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1731,7 +1731,7 @@ class Compiler_Codon(Compiler):
 
         # hack to use yogi
         shutil.copy(os.path.dirname(yogi.__file__) + '/yogi.codon', '.')
-        shutil.copy(os.path.dirname(yogi.__file__) + '/yogi.codon', './jutge.codon')
+        #??? shutil.copy(os.path.dirname(yogi.__file__) + '/yogi.codon', './jutge.codon')
 
         util.del_file('compilation1.txt')
         try:
@@ -1753,7 +1753,7 @@ class Compiler_Codon(Compiler):
         # Compile modified program
         util.del_file('compilation2.txt')
         try:
-            self.execute_compiler('codon build -exe ' + self.flags1() + ' ' + 'program.codon 2> compilation2.txt')
+            self.execute_compiler('codon build -exe ' + self.flags1() + ' ' + 'program.codon > compilation2.txt 2>&1')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
