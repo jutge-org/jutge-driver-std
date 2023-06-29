@@ -2379,7 +2379,7 @@ class Compiler_PRO2(Compiler):
         return self.get_version('g++ --version', 0)
 
     def flags1(self):
-        return '-D_JUDGE_ -D_GLIBCXX_DEBUG -O2 -Wall -Wextra -Werror -Wno-sign-compare -std=c++11'
+        return '-D_JUDGE_ -D_GLIBCXX_DEBUG -O2 -Wall -Wextra -Werror -Wno-sign-compare -std=c++11 -finput-charset=iso-8859-15'
 
     def flags2(self):
         return '-D_JUDGE_ -D_GLIBCXX_DEBUG -O2 -std=c++11'
