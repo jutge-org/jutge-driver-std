@@ -22,6 +22,7 @@ class Judge:
         logging.getLogger('chardet.charsetprober').setLevel(logging.INFO)
         logging.info('<<<< start >>>>')
         self.init_phase()
+        self.prepare_pylibs_phase()
         self.solution_phase()
         self.correction_phase()
         logging.info('<<<< end with veredict %s >>>>' % self.cor.veredict)
@@ -72,6 +73,26 @@ class Judge:
             x.tests = {}
             for t in self.tests:
                 x.tests[t] = {}
+
+    def prepare_pylibs_phase(self):
+        logging.info('**** prepare pylibs phase ****')
+
+        paths = []
+        allowed_libs = self.hdl.get('pylibs', [])
+        installed_libs = glob.glob('*', root_dir='/opt/pylibs')
+        for lib in installed_libs:
+            if lib in allowed_libs:
+                paths.append(f'/opt/pylibs/{lib}/lib/python3.10/site-packages')
+            else:
+                os.chmod(f'/opt/pylibs/{lib}', 0o000)
+        pythonpath = ':'.join(paths)
+        os.environ['PYTHONPATH'] = pythonpath
+
+        logging.info(f'    installed libs: {available_libs}')
+        logging.info(f'    allowed libs: {allowed_libs}')
+        logging.info(f'    PYTHONPATH: {pythonpath}')
+
+
 
     def solution_phase(self):
         """Judges the reference solution."""
