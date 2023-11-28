@@ -88,7 +88,7 @@ class Judge:
         pythonpath = ':'.join(paths)
         os.environ['PYTHONPATH'] = pythonpath
 
-        logging.info(f'    installed libs: {available_libs}')
+        logging.info(f'    installed libs: {installed_libs}')
         logging.info(f'    allowed libs: {allowed_libs}')
         logging.info(f'    PYTHONPATH: {pythonpath}')
 
