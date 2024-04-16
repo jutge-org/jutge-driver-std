@@ -16,6 +16,10 @@ import checkers
 from jutge import util
 import monitor
 
+class CheatingException(Exception):
+    pass
+
+
 class Judge:
 
     def go(self):
@@ -367,14 +371,18 @@ class Judge:
         else:
             success = True
 
-        # Move the files up
+        # Move the files up (and check they are not simlinks)
         for ext in ('inp', 'out', 'err', 'log', 'res'):
             # the following check is due to a difficult bug we once had
             if not util.file_exists(test + '.' + ext):
                 raise Exception('%s missing!!!' % (test + '.' + ext,))
             else:
+                if os.path.islink(test + '.' + ext):
+                    raise CheatingException('%s is a simlink!!!' % (test + '.' + ext,))
                 util.move_file(test + '.' + ext, '..')
         if util.file_exists('exception.txt'):
+            if os.path.islink('exception.txt'):
+                raise CheatingException('%s is a simlink!!!' % ('exception.txt',))
             util.del_file('../%s.exc' % test)
             util.move_file('exception.txt', '../%s.exc' % test)
 
@@ -628,6 +636,14 @@ if __name__ == '__main__':
         judge.go()
         # print json.dumps(judge, default=lambda obj: vars(obj), indent=4)
         sys.exit(0)
+    except CheatingException as e:
+        util.write_file(d + '/correction/correction.yml', 'veredict: UE\nverdict_info: Cheating\n')
+        logging.info('!!!! exception caught !!!!')
+        logging.info(e)
+        print(e, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        print(json.dumps(judge, default=lambda obj: vars(obj), indent=4), file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         util.write_file(d + '/correction/correction.yml', 'veredict: IE\ninternal_error: %s\n' % e)
         logging.info('!!!! exception caught !!!!')
