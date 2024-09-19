@@ -2783,6 +2783,52 @@ class Compiler_Kotlin(Compiler):
         self.execute_monitor(tst, 'kotlinc program.kt')
 
 
+class Compiler_Zig(Compiler):
+    compilers.append('Zig')
+
+    def name(self):
+        return 'Zig'
+
+    def type(self):
+        return 'compiler'
+
+    def executable(self):
+        return 'program.exe'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Zig'
+
+    def version(self):
+        return self.get_version('zig version', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'zig'
+
+    def compile(self):
+        util.del_file('program.exe')
+        try:
+            self.execute_compiler('zig build-exe ' +
+                                  self.flags1() + ' program.zig 1> /dev/null 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
+            return False
+
+        return util.file_size('compilation1.txt') == 0
+
+    def execute(self, tst):
+        self.execute_monitor(tst, './program.exe')
+
+
 def compiler(cpl, handler=None):
     """Returns a compiler for cpl."""
 
