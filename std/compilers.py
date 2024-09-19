@@ -2793,7 +2793,7 @@ class Compiler_Zig(Compiler):
         return 'compiler'
 
     def executable(self):
-        return 'program.exe'
+        return 'program'
 
     def prepare_execution(self, ori):
         util.copy_file(ori + '/' + self.executable(), '.')
@@ -2814,19 +2814,19 @@ class Compiler_Zig(Compiler):
         return 'zig'
 
     def compile(self):
-        util.del_file('program.exe')
+        util.del_file('program')
         try:
             self.execute_compiler('zig build-exe ' +
                                   self.flags1() + ' program.zig 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
-            util.del_file('program.exe')
+            util.del_file('program')
             return False
 
         return util.file_size('compilation1.txt') == 0
 
     def execute(self, tst):
-        self.execute_monitor(tst, './program.exe')
+        self.execute_monitor(tst, './program')
 
 
 def compiler(cpl, handler=None):
