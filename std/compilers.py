@@ -2267,7 +2267,7 @@ class Compiler_Go(Compiler):
         return util.file_exists('program.exe')
 
     def execute(self, tst):
-        self.execute_monitor(tst, './program.exe')
+        self.execute_monitor(tst, ' --maxmem=1024:1024 --maxprocs=4 ./program.exe')
 
 
 class Compiler_CLISP(Compiler):
@@ -2793,7 +2793,7 @@ class Compiler_Zig(Compiler):
         return 'compiler'
 
     def executable(self):
-        return 'program'
+        return 'z'
 
     def prepare_execution(self, ori):
         util.copy_file(ori + '/' + self.executable(), '.')
@@ -2816,7 +2816,7 @@ class Compiler_Zig(Compiler):
     def compile(self):
         util.del_file('program')
         try:
-            self.execute_compiler('zig build-exe ' +
+            self.execute_compiler('zig build-exe -femit-bin=./z' +
                                   self.flags1() + ' program.zig 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
@@ -2826,7 +2826,7 @@ class Compiler_Zig(Compiler):
         return util.file_size('compilation1.txt') == 0
 
     def execute(self, tst):
-        self.execute_monitor(tst, './program')
+        self.execute_monitor(tst, './z')
 
 
 def compiler(cpl, handler=None):
