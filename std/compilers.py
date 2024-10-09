@@ -282,7 +282,11 @@ class Compiler_GenericC(Compiler):
         if util.file_exists('program.exe'):
             return True
         else:
-            util.write_file('compilation1.txt', "Unreported error. ")
+            if util.file_size('compilation1.txt') == 0:
+                if util.file_size('compilation2.txt') == 0:
+                    util.write_file('compilation1.txt', "Unreported error. ")
+                else:
+                    util.move_file('compilation2.txt', 'compilation1.txt')
             util.del_file('program.exe')
             return False
 
@@ -382,7 +386,11 @@ class Compiler_GenericCXX(Compiler):
         if util.file_exists('program.exe'):
             return True
         else:
-            util.write_file('compilation1.txt', 'Unreported error. ')
+            if util.file_size('compilation1.txt') == 0:
+                if util.file_size('compilation2.txt') == 0:
+                    util.write_file('compilation1.txt', "Unreported error. ")
+                else:
+                    util.move_file('compilation2.txt', 'compilation1.txt')
             util.del_file('program.exe')
             return False
 
@@ -430,7 +438,11 @@ class Compiler_GenericCXX(Compiler):
         if util.file_exists('program.exe'):
             return True
         else:
-            util.write_file('compilation1.txt', "Unreported error. ")
+            if util.file_size('compilation1.txt') == 0:
+                if util.file_size('compilation2.txt') == 0:
+                    util.write_file('compilation1.txt', "Unreported error. ")
+                else:
+                    util.move_file('compilation2.txt', 'compilation1.txt')
             util.del_file('program.exe')
             return False
 
