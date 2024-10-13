@@ -2224,6 +2224,48 @@ class Compiler_nodejs(Compiler):
         if r != 0:
             raise ExecutionError
 
+class Compiler_Typescript(Compiler):
+    compilers.append('Typescript')
+
+    def name(self):
+        return 'Typescript (Bun)'
+
+    def type(self):
+        return 'interpreter'
+
+    def executable(self):
+        return 'program'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Typescript'
+
+    def version(self):
+        return self.get_version('/opt/bun/bin/bun --version', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'ts'
+
+    def compile(self):
+        util.del_file('program.exe')
+        try:
+            self.execute_compiler('/opt/bun/bin/bun build --compile program.ts 1> /dev/null 2> compilation1.txt')
+        except CompilationTooLong:
+            util.write_file('compilation1.txt', 'Compilation time exceeded')
+            util.del_file('program.exe')
+            return False
+        return util.file_exists('program')
+
+    def execute(self, tst):
+        self.execute_monitor_in_tmp(tst, ' --maxprocs=100 --maxmem=2048:2048 ./program')
 
 class Compiler_Go(Compiler):
     compilers.append('Go')
