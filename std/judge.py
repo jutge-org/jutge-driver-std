@@ -13,7 +13,7 @@ import json
 import compilers
 import checkers
 
-from jutge import util
+import util
 import monitor
 
 class CheatingException(Exception):

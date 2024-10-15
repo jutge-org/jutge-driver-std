@@ -4,8 +4,7 @@ import os
 import re
 import time
 import signal
-
-from jutge import util
+import util
 
 """
 Checker functions are used to check that a generated output file is correct with

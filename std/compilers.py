@@ -11,7 +11,7 @@ import shutil
 import uuid
 
 import monitor
-from jutge import util
+import util
 import yogi
 
 # Maximum time to compile
