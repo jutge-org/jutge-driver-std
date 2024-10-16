@@ -710,7 +710,7 @@ class Compiler_GHC(Compiler):
         return util.file_exists('program.exe')
 
     def execute(self, tst):
-        self.execute_monitor(tst, './program.exe')
+        self.execute_monitor(tst, '--maxmem=1400:128 ./program.exe')
 
 
 class Compiler_RunHaskell(Compiler):
