@@ -2832,7 +2832,6 @@ class Compiler_Kotlin(Compiler):
         opsMonitor = '--maxprocs=100 --maxtime=10 --maxprocs=4096 --maxmem=2048:2048'
         cmd = '%s --basename=%s --maxtime=10 %s %s  -- /usr/bin/java -Xmx1024M -Xss1024M -jar program.jar ' \
         % (monitor.path, tst, ops, opsMonitor)
-        logging.info(subprocess.run(['tree', '-phau', '/home/worker'], capture_output=True, text=True).stdout)
         # Execute the command and get its result code
         logging.info(cmd)
         
