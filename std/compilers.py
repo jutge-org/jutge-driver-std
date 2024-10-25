@@ -2785,10 +2785,10 @@ class Compiler_Kotlin(Compiler):
         return 'Kotlin'
 
     def type(self):
-        return 'interpreter'
+        return 'compiler (vm)'
 
     def executable(self):
-        return 'program.kt'
+        return 'program.jar'
 
     def prepare_execution(self, ori):
         util.copy_file(ori + '/' + self.executable(), '.')
@@ -2809,20 +2809,55 @@ class Compiler_Kotlin(Compiler):
         return 'kt'
 
     def compile(self):
-        util.del_file('program.exe')
+        for f in glob.glob('*.class'):
+            util.del_file(f)
+        util.del_file('program.jar')    
         try:
             self.execute_compiler('kotlinc ' +
-                                  self.flags1() + ' program.kt')
+                                  self.flags1() + ' program.kt -d program.jar -include-runtime > compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
-            util.del_file('program.exe')
             return False
 
         return util.file_size('compilation1.txt') == 0
 
     def execute(self, tst):
-        os.system('ln -s /opt/.konan ./.konan')
-        self.execute_monitor(tst, 'kotlinc program.kt')
+        ops = ''
+        if util.file_exists(tst + '.ops'):
+            ops += ' ' + util.read_file(tst + '.ops').replace('\n', ' ')
+        if util.file_exists(tst + '.JDK.ops'):
+            ops += ' ' + util.read_file(tst + '.JDK.ops').replace('\n', ' ')
+        
+        # Prepare the command
+        opsMonitor = '--maxprocs=100 --maxtime=10 --maxprocs=4096 --maxmem=2048:2048'
+        cmd = '%s --basename=%s --maxtime=10 %s %s  -- /usr/bin/java -Xmx1024M -Xss1024M -jar program.jar ' \
+        % (monitor.path, tst, ops, opsMonitor)
+        logging.info(subprocess.run(['tree', '-phau', '/home/worker'], capture_output=True, text=True).stdout)
+        # Execute the command and get its result code
+        logging.info(cmd)
+        
+        # Execute the command and get its result code
+        # Because JDK does not like to have its path blocked, the directory cannot be in
+        # its current location. So we temporarilly move it to /tmp.
+
+        # move to tmp
+        old = os.getcwd()
+        tmp = util.tmp_dir()
+        os.system("mv * " + tmp)
+        os.chdir(tmp)
+
+        pro = subprocess.Popen(cmd, shell=True, close_fds=True)
+        r = pro.wait()
+        if r > 256:
+            r /= 256
+
+        # move back from /tmp
+        os.system("mv * " + old)
+        os.chdir(old)
+
+
+        if r != 0:
+            raise ExecutionError
 
 
 class Compiler_Zig(Compiler):
