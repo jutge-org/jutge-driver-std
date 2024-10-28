@@ -2819,7 +2819,7 @@ class Compiler_Kotlin(Compiler):
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
 
-        return util.file_size('compilation1.txt') == 0
+        return util.file_exists('program.jar')
 
     def execute(self, tst):
         ops = ''
