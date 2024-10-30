@@ -779,7 +779,7 @@ class Compiler_RunHaskell(Compiler):
 
     def execute(self, tst):
         if self.compile_with(tst + ".inp"):
-            self.execute_monitor(tst, './work.exe')
+            self.execute_monitor(tst, '--maxmem=1152:128 ./work.exe')
         else:
             # hack to get required files
             self.execute_monitor(tst, '/bin/cat')
