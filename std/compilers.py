@@ -2356,7 +2356,7 @@ class Compiler_CLISP(Compiler):
 
     def execute(self, tst):
         # clisp opens some auxiliar files???
-        self.execute_monitor(tst, ' --maxfiles=8 /usr/bin/clisp program.fas')
+        self.execute_monitor_in_tmp(tst, ' --maxfiles=8 /usr/bin/clisp program.fas')
 
 
 class Compiler_Verilog(Compiler):
