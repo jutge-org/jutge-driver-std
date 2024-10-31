@@ -2829,7 +2829,7 @@ class Compiler_Kotlin(Compiler):
             ops += ' ' + util.read_file(tst + '.JDK.ops').replace('\n', ' ')
         
         # Prepare the command
-        opsMonitor = '--maxprocs=100 --maxtime=10 --maxprocs=4096 --maxmem=2048:2048'
+        opsMonitor = '--maxprocs=100 --maxtime=10 --maxfiles=4096 --maxmem=2048:2048'
         cmd = '%s --basename=%s --maxtime=10 %s %s  -- /usr/bin/java -Xmx1024M -Xss1024M -jar program.jar ' \
         % (monitor.path, tst, ops, opsMonitor)
         # Execute the command and get its result code
