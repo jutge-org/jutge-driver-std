@@ -2681,7 +2681,7 @@ class Compiler_Crystal(Compiler):
         return util.file_exists('program.exe')
 
     def execute(self, tst):
-        self.execute_monitor(tst, './program.exe')
+        self.execute_monitor_in_tmp(tst, './program.exe')
 
 
 class Compiler_Nim(Compiler):
