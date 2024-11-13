@@ -864,6 +864,110 @@ class Compiler_RunPython(Compiler):
             print("execution_error: Cannot test", file=f)
             f.close()
 
+class Compiler_Clojure(Compiler):
+    compilers.append('Clojure')
+
+    def name(self):
+        return 'Clojure'
+
+    def type(self):
+        return 'interpreter'
+
+    def executable(self):
+        return 'program.clj'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+
+    def language(self):
+        return 'Clojure'
+
+    def version(self):
+        return self.get_version('clojure --version', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'clj'
+
+    def compile(self):
+        # I don't know how to compile only using Clojure
+        return True
+
+    def execute(self, tst):    
+        util.write_file('deps.edn', '{:mvn/local-repo \"/clojure/.m2\"\n :paths ["src"]}')
+        os.mkdir('src')
+        util.write_file('src/core.clj', "(ns core)\n\n")
+        with open('program.clj', 'r') as f:
+            f2 = open('src/core.clj', 'a')
+            print(f.read(), file=f2)
+            f2.close()
+        self.execute_monitor_in_tmp(tst, '--maxprocs=50 --maxmem=2048:256 -- /usr/bin/bash -c "HOME=/tmp /usr/local/bin/clojure -M -e \\\"(use \'core)(-main)\\\" src/core.clj"')
+        if os.path.islink('deps.edn'):
+            raise Exception('deps.edn is a symlink!')
+        else:
+            util.del_file('deps.edn')
+
+
+class Compiler_RunClojure(Compiler):
+    compilers.append('RunClojure')
+
+    def name(self):
+        return 'Clojure (with tweaks for testing in the judge)'
+
+    def type(self):
+        return 'interpreter (vm)'
+
+    def executable(self):
+        return 'program.clj'
+
+    def prepare_execution(self, ori):
+        util.copy_file(ori + '/' + self.executable(), '.')
+        if util.file_exists(ori + '/' + "judge.clj"):
+            util.copy_file(ori + '/' + "judge.clj", '.')
+
+    def language(self):
+        return 'Clojure'
+
+    def version(self):
+        return self.get_version('clj --version', 0)
+
+    def flags1(self):
+        return ''
+
+    def flags2(self):
+        return ''
+
+    def extension(self):
+        return 'clj'
+
+    def compile(self):
+        return True
+
+    def compile_with(self, extra):
+        util.copy_file("program.clj", "work.clj")
+        if util.file_exists("judge.clj"):
+            os.system("cat judge.clj >> work.clj")
+        f = open("work.clj", "a")
+        print("\n")
+        for line in open(extra).readlines():
+            line = line.rstrip()
+            print("(println %s)" % line, file=f)
+        f.close()
+        return util.file_exists('work.clj')
+
+    def execute(self, tst):
+        if self.compile_with(tst + ".inp"):
+            util.write_file('deps.edn', '{:mvn/local-repo \"/clojure/.m2\"}')
+            self.execute_monitor_in_tmp(tst, '--maxprocs=50 --maxmem=2048:256 -- /usr/bin/bash -c "HOME=/tmp /usr/local/bin/clojure -M work.clj"')
+            if os.path.islink('deps.edn'):
+                raise Exception('deps.edn is a symlink!')
+            else:
+                util.del_file('deps.edn')
 
 class Compiler_GDC(Compiler):
     compilers.append('GDC')
