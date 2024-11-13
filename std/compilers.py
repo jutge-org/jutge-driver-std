@@ -2294,12 +2294,13 @@ class Compiler_nodejs(Compiler):
         return 'js'
 
     def compile(self):
-        return True
+        self.execute_compiler('node --check program.js 2> compilation1.txt')
+        return util.file_size('compilation1.txt') == 0
 
     def execute(self, tst):
         #        self.execute_monitor(tst, ' --maxprocs=100 --maxmem=1024:1024 /usr/bin/node program.js')
 
-        cmd = '%s --basename=%s --maxprocs=100 --maxmem=1024:1024 -- /usr/bin/node program.js' \
+        cmd = '%s --basename=%s --maxprocs=100 --maxmem=2048:1024 -- /usr/bin/node program.js' \
               % (monitor.path, tst)
 
         # Execute the command and get its result code
