@@ -81,20 +81,14 @@ class Judge:
     def prepare_pylibs_phase(self):
         logging.info('**** prepare pylibs phase ****')
 
-        paths = []
         allowed_libs = self.hdl.get('pylibs', [])
         installed_libs = glob.glob('*', root_dir='/opt/pylibs')
-        for lib in installed_libs:
-            if lib in allowed_libs:
-                paths.append(f'/opt/pylibs/{lib}/lib/python3.10/site-packages')
-            else:
-                os.chmod(f'/opt/pylibs/{lib}', 0o000)
-        pythonpath = ':'.join(paths)
-        os.environ['PYTHONPATH'] = pythonpath
+        for lib in allowed_libs:
+            if lib in installed_libs:
+                os.chmod(f'/opt/pylibs/{lib}', 0o755)
 
         logging.info(f'    installed libs: {installed_libs}')
         logging.info(f'    allowed libs: {allowed_libs}')
-        logging.info(f'    PYTHONPATH: {pythonpath}')
 
 
 
