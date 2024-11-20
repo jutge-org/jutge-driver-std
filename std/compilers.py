@@ -2827,10 +2827,8 @@ class Compiler_Nim(Compiler):
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             util.del_file('program.exe')
-            shutil.rmtree('nimcache')
             return False
 
-        shutil.rmtree('nimcache')
         return util.file_exists('program.exe')
 
     def execute(self, tst):
