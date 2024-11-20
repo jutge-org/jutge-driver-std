@@ -2059,7 +2059,7 @@ class Compiler_Ruby(Compiler):
         return True
 
     def execute(self, tst):
-        self.execute_monitor(tst, ' /usr/bin/ruby program.rb')
+        self.execute_monitor_in_tmp(tst, ' --maxmem=256:128 /usr/bin/ruby program.rb')
 
 
 class Compiler_Guile(Compiler):
