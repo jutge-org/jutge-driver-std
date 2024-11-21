@@ -2866,19 +2866,10 @@ class Compiler_Julia(Compiler):
         return 'jl'
 
     def compile(self):
-        util.del_file('program.exe')
-        try:
-            self.execute_compiler('julia ' +
-                                  self.flags1() + ' program.jl 1> /dev/null 2> compilation1.txt')
-        except CompilationTooLong:
-            util.write_file('compilation1.txt', 'Compilation time exceeded')
-            util.del_file('program.exe')
-            return False
-
-        return util.file_size('compilation1.txt') == 0
+        return True
 
     def execute(self, tst):
-        self.execute_monitor(tst, 'julia program.jl')
+        self.execute_monitor_in_tmp(tst, ' --maxprocs=2 --maxmem=2048:256 -- /bin/bash -c "HOME=/tmp /usr/bin/julia program.jl"')
 
 
 class Compiler_Kotlin(Compiler):
