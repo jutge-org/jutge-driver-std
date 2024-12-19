@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import codecs
 import glob
 import logging
@@ -898,7 +899,7 @@ class Compiler_Clojure(Compiler):
         # I don't know how to compile only using Clojure
         return True
 
-    def execute(self, tst):    
+    def execute(self, tst):
         util.write_file('deps.edn', '{:mvn/local-repo \"/clojure/.m2\"\n :paths ["src"]}')
         os.mkdir('src')
         util.write_file('src/core.clj', "(ns core)\n\n")
@@ -2905,7 +2906,7 @@ class Compiler_Kotlin(Compiler):
     def compile(self):
         for f in glob.glob('*.class'):
             util.del_file(f)
-        util.del_file('program.jar')    
+        util.del_file('program.jar')
         try:
             self.execute_compiler('kotlinc ' +
                                   self.flags1() + ' program.kt -d program.jar -include-runtime > compilation1.txt')
@@ -2921,7 +2922,7 @@ class Compiler_Kotlin(Compiler):
             ops += ' ' + util.read_file(tst + '.ops').replace('\n', ' ')
         if util.file_exists(tst + '.JDK.ops'):
             ops += ' ' + util.read_file(tst + '.JDK.ops').replace('\n', ' ')
-        
+
         # Prepare the command
         opsMonitor = '--maxprocs=100 --maxtime=10 --maxprocs=4096 --maxmem=2048:2048'
         cmd = '%s --basename=%s --maxtime=10 %s %s  -- /usr/bin/java -Xmx1024M -Xss1024M -jar program.jar ' \
@@ -2929,7 +2930,7 @@ class Compiler_Kotlin(Compiler):
         logging.info(subprocess.run(['tree', '-phau', '/home/worker'], capture_output=True, text=True).stdout)
         # Execute the command and get its result code
         logging.info(cmd)
-        
+
         # Execute the command and get its result code
         # Because JDK does not like to have its path blocked, the directory cannot be in
         # its current location. So we temporarilly move it to /tmp.
@@ -3007,14 +3008,9 @@ def compiler(cpl, handler=None):
     return eval('Compiler_%s(handler)' % cpl)
 
 
-def info():
-    """Returns the info on all the compilers."""
-
-    r = {}
-    for x in compilers:
-        r[x] = compiler(x).info()
-    return r
+def info(compiler_id):
+    return compiler(compiler_id).info()
 
 
 if __name__ == '__main__':
-    util.print_yml(info())
+    util.print_yml(info(sys.argv[1]))
