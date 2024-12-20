@@ -2870,7 +2870,7 @@ class Compiler_Julia(Compiler):
         return True
 
     def execute(self, tst):
-        self.execute_monitor_in_tmp(tst, ' --maxprocs=2 --maxmem=2048:256 -- /bin/bash -c "HOME=/tmp /usr/bin/julia program.jl"')
+        self.execute_monitor_in_tmp(tst, ' --maxprocs=32 --maxmem=2048:256 -- /bin/bash -c "HOME=/tmp /usr/bin/julia program.jl"')
 
 
 class Compiler_Kotlin(Compiler):
