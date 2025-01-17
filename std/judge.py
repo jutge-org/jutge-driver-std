@@ -376,12 +376,6 @@ class Judge:
                 if os.path.islink(test + '.' + ext):
                     raise CheatingException('%s is a simlink!!!' % (test + '.' + ext,))
                 util.move_file(test + '.' + ext, '..')
-        if util.file_exists('exception.txt'):
-            if os.path.islink('exception.txt'):
-                raise CheatingException('%s is a simlink!!!' % ('exception.txt',))
-            util.del_file('../%s.exc' % test)
-            util.move_file('exception.txt', '../%s.exc' % test)
-
         # Remove the subdirectory
         os.chdir('..')
         util.del_dir(testdir)
@@ -406,9 +400,6 @@ class Judge:
             inp = '../problem/' + test + '.inp'
             if 'execution' not in inf:
                 inf['veredict'] = '??'
-            elif util.file_exists(test + ".exc"):
-                inf['veredict'] = 'EE'
-                inf['veredict_info'] = "Uncaught exception " + util.read_file(test + ".exc").split()[0]
             elif inf['execution'] == 'EE':
                 inf['veredict'] = 'EE'
                 inf['veredict_info'] = inf['execution_error']
