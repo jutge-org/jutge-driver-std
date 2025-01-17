@@ -9,6 +9,7 @@ import math
 import re
 import traceback
 import json
+import subprocess
 
 import compilers
 import checkers
@@ -107,6 +108,7 @@ class Judge:
             self.checking_step()
             self.evaluation_step()
             self.postprocess_step()
+        log_tree(self.dir + '/solution')    
         self.output_step()
 
     def correction_phase(self):
@@ -519,14 +521,16 @@ class Judge:
         os.chdir(self.dir + '/' + self.phase)
         self.pha.postprocess.del_files = self.get('del_files', True)
         if self.pha.postprocess.del_files:
-            util.del_file('program.exe')
-            # TBD: other program files as *.class should be deleted
+            com = compilers.compiler(self.pha.compilation.compiler, self.hdl)
+            self.clean_programs(com)
             for f in glob.glob('*.inp'):
                 util.del_file(f)
             for f in glob.glob('*.wrk'):
                 util.del_file(f)
             for f in glob.glob('*.res'):
                 util.del_file(f)
+            for f in glob.glob('*.log'):
+                util.del_file(f)    
             for f in glob.glob('*.err'):
                 if util.file_size(f) == 0:
                     util.del_file(f)
@@ -536,6 +540,9 @@ class Judge:
             if self.pha.veredict == 'AC':
                 for f in glob.glob('*.out'):
                     util.del_file(f)
+            if self.phase == 'solution':
+                os.chdir(self.dir + '/problem')
+                self.clean_programs(com)
 
     def get_tests(self):
         """Returns the list of tests, in sorted order, with sample* first."""
@@ -579,6 +586,20 @@ class Judge:
         return val
 
 
+    def clean_programs(self, com):
+        for f in glob.glob("solution.*"):
+            util.del_file(f)
+        for f in glob.glob("program.*"):
+            util.del_file(f)    
+        for f in glob.glob("*.o"):
+            util.del_file(f)    
+        for f in glob.glob("*.class"):
+            util.del_file(f)
+        for f in glob.glob("*.pyc"):
+            util.del_file(f)
+        util.del_dir("__pycache__")        
+
+
 def tweak(xs):
     # resulta que el yaml del php no enten les seqs com les escriu el yaml del python
     # aixi que passo la seq a dic, que si que van be
@@ -611,6 +632,8 @@ def todict(obj, classkey=None):
     else:
         return obj
 
+def log_tree(dir):
+    logging.info(subprocess.run(["/usr/bin/tree", "-phau", dir], capture_output=True, text=True).stdout)
 
 class Record:
     """Just to have an object to fill with fields."""

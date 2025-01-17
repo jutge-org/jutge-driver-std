@@ -88,9 +88,12 @@ class Compiler:
         """Returns extension of the source files (without dot)."""
         raise Exception('Abstract method')
 
-    def compile(self):
-        """Doc missing."""
-        raise Exception('Abstract method')
+    def does_compile(self) -> bool:
+        return self.type() != 'interpreter'   
+
+    def compile(self) -> bool:
+        """Runs the compilation. Returns true if it completed successfully. """
+        raise Exception('Abstract method')    
 
     def execute(self, tst):
         """Doc missing."""
@@ -101,10 +104,13 @@ class Compiler:
         pid = os.fork()
         if pid == 0:
             # Child
-            logging.info(cmd)
-            os.system(cmd)
-            if util.file_exists('program.exe'):
-                os.system('strip program.exe')
+            logging.info('Running command through somhi: ' + cmd)
+            util.write_file('run', cmd)
+            os.chmod('run', 0o755)
+            os.system('sudo -h localhost /usr/local/bin/jutge-somhi')
+            logging.info(subprocess.run(["/usr/bin/tree", "-phau", os.getcwd()], capture_output=True, text=True).stdout)
+            util.del_file('run')
+            logging.info('Finished somhi execution')
             os._exit(0)
         else:
             # Parent
@@ -113,11 +119,28 @@ class Compiler:
                 ret = os.waitpid(pid, os.WNOHANG)
                 if ret[0] != 0:
                     # Ok!
+                    if util.file_exists('program.exe'):
+                        os.system('strip program.exe')
                     return
                 time.sleep(0.1)
                 c += 0.1
             os.kill(pid, signal.SIGKILL)
             raise CompilationTooLong
+
+    def execute_compiler_in_tmp(self, cmd):
+        """Executes somhi to run a program using /tmp because some langs want complete access to the full path leading to the current working directory. """
+        ori = os.getcwd()
+        wrk = '/tmp/somhi.' + str(uuid.uuid4())[:8]
+        util.del_dir(wrk)
+        os.mkdir(wrk)
+        os.system('cp -r * ' + wrk)
+        os.chdir(wrk)
+        try:
+            self.execute_compiler(cmd)
+        finally:
+            os.system('cp -r * ' + ori)
+            os.chdir(ori)        
+            util.del_dir(wrk)
 
     def execute_monitor(self, tst, pgm):
         """Executes the monitor to run a program. """
@@ -167,6 +190,7 @@ class Compiler:
         finally:
             os.system('cp -r * ' + ori)
             os.chdir(ori)
+            util.del_dir(wrk)
 
     def get_version(self, cmd, lin):
         """Private method to get a particular line from a command output."""
@@ -1289,7 +1313,7 @@ class Compiler_GNAT(Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('gnat make ' + self.flags1() +
+            self.execute_compiler_in_tmp('gnat make ' + self.flags1() +
                                   ' program.ada -o program.exe 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
@@ -1437,7 +1461,7 @@ class Compiler_JDK(Compiler):
         try:
             util.copy_file('../driver/etc/jdk/JudgeMain.java', '.')
             util.copy_file('program.java', 'Main.java')
-            self.execute_compiler('javac ' + self.flags1() + ' JudgeMain.java 2> compilation1.txt')
+            self.execute_compiler_in_tmp('javac ' + self.flags1() + ' JudgeMain.java 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -1450,13 +1474,13 @@ class Compiler_JDK(Compiler):
             util.del_file(f)
         try:
             # create Solution.class
-            self.execute_compiler('javac ' + self.flags1() + ' program.java 2> compilation1.txt')
+            self.execute_compiler_in_tmp('javac ' + self.flags1() + ' program.java 2> compilation1.txt')
             # create Main.class
             util.copy_file('../problem/main.java', '.')
-            self.execute_compiler('javac ' + self.flags1() + ' main.java 2> compilation2.txt')
+            self.execute_compiler_in_tmp('javac ' + self.flags1() + ' main.java 2> compilation2.txt')
             # create JudgeMain.class
             util.copy_file('../driver/etc/jdk/JudgeMain.java', 'JudgeMain.java')
-            self.execute_compiler('javac ' + self.flags1() + ' JudgeMain.java 2> compilation2.txt')
+            self.execute_compiler_in_tmp('javac ' + self.flags1() + ' JudgeMain.java 2> compilation2.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -2295,7 +2319,7 @@ class Compiler_nodejs(Compiler):
         return 'js'
 
     def compile(self):
-        self.execute_compiler('node --check program.js 2> compilation1.txt')
+        self.execute_compiler_in_tmp('node --check program.js 2> compilation1.txt')
         return util.file_size('compilation1.txt') == 0
 
     def execute(self, tst):
@@ -2406,7 +2430,7 @@ class Compiler_Go(Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('go build -o program.exe ' +
+            self.execute_compiler_in_tmp('HOME=/tmp go build -o program.exe ' +
                                   self.flags1() + ' program.go 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
@@ -2451,7 +2475,7 @@ class Compiler_CLISP(Compiler):
     def compile(self):
         util.del_file('program.fas')
         try:
-            self.execute_compiler('clisp -c ' + self.flags1() +
+            self.execute_compiler_in_tmp('clisp -c ' + self.flags1() +
                                   ' program.lisp >/dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
@@ -2778,7 +2802,7 @@ class Compiler_Crystal(Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('crystal build -o program.exe ' +
+            self.execute_compiler_in_tmp('crystal build -o program.exe ' +
                                   self.flags1() + ' program.cr 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
@@ -2823,7 +2847,7 @@ class Compiler_Nim(Compiler):
     def compile(self):
         util.del_file('program.exe')
         try:
-            self.execute_compiler('nim c -o:program.exe ' +
+            self.execute_compiler_in_tmp('nim --nimcache:/tmp c -o:program.exe ' +
                                   self.flags1() + ' program.nim 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
@@ -2908,8 +2932,8 @@ class Compiler_Kotlin(Compiler):
             util.del_file(f)
         util.del_file('program.jar')
         try:
-            self.execute_compiler('kotlinc ' +
-                                  self.flags1() + ' program.kt -d program.jar -include-runtime > compilation1.txt')
+            self.execute_compiler_in_tmp('kotlinc ' +
+                                  self.flags1() + 'program.kt -d program.jar -include-runtime > compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
             return False
@@ -2988,7 +3012,7 @@ class Compiler_Zig(Compiler):
     def compile(self):
         util.del_file('program')
         try:
-            self.execute_compiler('zig build-exe -femit-bin=./z' +
+            self.execute_compiler('HOME=/tmp /opt/zig/zig build-exe -femit-bin=./z' +
                                   self.flags1() + ' program.zig 1> /dev/null 2> compilation1.txt')
         except CompilationTooLong:
             util.write_file('compilation1.txt', 'Compilation time exceeded')
