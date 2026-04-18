@@ -19,15 +19,15 @@ import yaml
 # Logging
 # ----------------------------------------------------------------------------
 
+
 def init_logging():
     """Configures custom logging options."""
 
     logging.basicConfig(
-        format='%s@%s ' % (get_username(), get_hostname()) +
-        '%(asctime)s %(levelname)s %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        format="%s@%s " % (get_username(), get_hostname()) + "%(asctime)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
-    logging.getLogger('').setLevel(logging.NOTSET)
+    logging.getLogger("").setLevel(logging.NOTSET)
 
 
 # ----------------------------------------------------------------------------
@@ -47,6 +47,7 @@ def get_hostname():
 # Utilities for lists
 # ----------------------------------------------------------------------------
 
+
 def intersection(a, b):
     return filter(lambda x: x in a, b)
 
@@ -59,15 +60,15 @@ def intersection(a, b):
 def read_file(name):
     """Returns a string with the contents of the file name."""
     try:
-        fd = open(name, 'r')
+        fd = open(name, "r")
         r = fd.read()
         fd.close()
     except Exception:
-        fd = open(name, 'rb')
+        fd = open(name, "rb")
         char_detection = chardet.detect(fd.read())
         fd.close()
 
-        f = open(name, encoding=char_detection['encoding'], errors='ignore')
+        f = open(name, encoding=char_detection["encoding"], errors="ignore")
         r = f.read()
         f.close()
     return r
@@ -95,7 +96,7 @@ def file_size(name):
 
 def tmp_dir():
     """Creates a temporal directory and returns its name."""
-    return tempfile.mkdtemp('.dir', get_username() + '-')
+    return tempfile.mkdtemp(".dir", get_username() + "-")
 
 
 def tmp_file():
@@ -128,12 +129,11 @@ def print_yml(inf):
 
 
 def write_yml(path, inf):
-    yaml.dump(inf, open(path, "w"), indent=4,
-              width=1000, default_flow_style=False)
+    yaml.dump(inf, open(path, "w"), indent=4, width=1000, default_flow_style=False)
 
 
 def read_yml(path):
-    return yaml.load(open(path, 'r'), Loader=yaml.FullLoader)
+    return yaml.load(open(path, "r"), Loader=yaml.FullLoader)
 
 
 # ----------------------------------------------------------------------------
@@ -209,9 +209,9 @@ def convert_bytes(num):
     """Converts bytes to Mb, Gb, etc"""
     step_unit = 1000.0  # 1024 bad the size
 
-    for x in ['bytes', 'Kb', 'Mb', 'Gb', 'Tb']:
+    for x in ["bytes", "Kb", "Mb", "Gb", "Tb"]:
         if num < step_unit:
-            if x == 'bytes':
+            if x == "bytes":
                 return "%i %s" % (num, x)
             else:
                 return "%3.1f %s" % (num, x)

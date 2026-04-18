@@ -234,7 +234,7 @@ class Judge:
         else:
             # no, we need to find another one, at this point we choose according to three categoiries
             slows = 'bf erl js lisp lua php pl py R rb ws'.split()
-            mediums = 'bas cs java scm'.split()
+            mediums = 'bas ts cs java scm'.split()
             fasts = 'ada c cc d f go hs pas'.split()
 
             if ext in fasts and util.file_exists('../problem/solution.cc'):
@@ -255,6 +255,9 @@ class Judge:
             if util.file_exists('../problem/solution.py'):
                 self.sol.compilation.match = 'py fallback'
                 return compilers.compiler('Python3', self.hdl)
+            if util.file_exists('../problem/solution.hs'):
+                self.sol.compilation.match = 'hs fallback'
+                return compilers.compiler('GHC', self.hdl)
 
             raise Exception('Could not find suitable compiler')
 
@@ -432,6 +435,9 @@ class Judge:
                 elif checker == 'external':
                     self.pha.checking.external_program = external_program = self.get('external_program')
                     self.pha.checking.external_timeout = external_timeout = self.get('external_timeout', 5)
+                    if external_program == "./checker.exe" and not util.file_exists(self.dir + '/problem/' + external_program) and util.file_exists(self.dir + '/problem/' + "checker.cc"): 
+                        logging.info('**** compiling external checker ****')
+                        os.system("g++ %s -o %s" % (self.dir + '/problem/checker.cc', self.dir + '/problem/checker.exe'))
                     util.copy_file(self.dir + '/problem/' + external_program, '.')
                     ver = checkers.external(external_program, inp, out, cor, external_timeout)
                 else:

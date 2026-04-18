@@ -3,7 +3,7 @@
 import os
 import stat
 
-path = '/usr/local/bin/jutge-vinga'
+path = "/usr/local/bin/jutge-vinga"
 
 
 def exists():
