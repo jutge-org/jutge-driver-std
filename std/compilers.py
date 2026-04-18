@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+# type: ignore
 
 import sys
-import codecs
 import glob
 import logging
 import os
