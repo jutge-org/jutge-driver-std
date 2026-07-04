@@ -482,6 +482,22 @@ class Compiler_GXX17(Compiler_GXX):
         return "-D_JUDGE_ -DNDEBUG -O2 -std=c++17"
 
 
+class Compiler_GXX23(Compiler_GXX):
+    compilers.append("GXX23")
+
+    def cmd(self):
+        return "g++-14"
+
+    def name(self):
+        return "GNU C++23 Compiler"
+
+    def flags1(self):
+        return "-D_JUDGE_ -DNDEBUG -O2 -std=c++23"
+
+    def flags2(self):
+        return "-D_JUDGE_ -DNDEBUG -O2 -std=c++23"
+
+
 class Compiler_ClangXX17(Compiler_GenericCXX):
     compilers.append("ClangXX17")
 
