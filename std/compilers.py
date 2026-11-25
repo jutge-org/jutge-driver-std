@@ -1545,8 +1545,9 @@ class Compiler_MyPy(Compiler):
 
         # check modified program
         try:
+            # poso --disable-error-code no-redef --disable-error-code misc perquè sibó el TypeAlias repetits donen error
             self.execute_compiler(
-                "mypy --no-error-summary --ignore-missing-imports --pretty --show-error-codes --show-column-numbers --show-error-context program.py > compilation2.txt"
+                "mypy --no-error-summary --ignore-missing-imports --pretty --show-error-codes --show-column-numbers --show-error-context --disable-error-code no-redef --disable-error-code misc program.py > compilation2.txt"
             )
         except CompilationTooLong:
             util.write_file("compilation2.txt", "Compilation time exceeded")
